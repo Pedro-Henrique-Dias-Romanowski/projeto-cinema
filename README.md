@@ -7,14 +7,14 @@ Este projeto consiste na simulação de um sistema de cinema baseado em microsse
 
 A aplicação é composta por três microsserviços independentes, cada um com responsabilidades bem definidas:
 
-ms-gerenciamento-clientes
-Responsável pelo cadastro, consulta e gerenciamento dos clientes do cinema.
+ms-gerenciamento-clientes:
+ Responsável pelo cadastro, consulta e gerenciamento dos clientes do cinema.
 
-ms-gerenciamento-sessoes
-Responsável pelo gerenciamento das sessões de filmes, bem como pelas reservas e cancelamentos realizados pelos clientes.
+ms-gerenciamento-sessoes:
+ Responsável pelo gerenciamento das sessões de filmes, bem como pelas reservas e cancelamentos realizados pelos clientes.
 
-ms-gerenciamento-catalogo
-Responsável pelo gerenciamento do catálogo de filmes disponíveis no cinema.
+ms-gerenciamento-catalogo:
+ Responsável pelo gerenciamento do catálogo de filmes disponíveis no cinema.
 
 ⚙️ Perfis de Execução
 
