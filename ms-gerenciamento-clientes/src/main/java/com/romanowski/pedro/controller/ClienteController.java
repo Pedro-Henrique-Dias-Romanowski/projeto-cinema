@@ -3,6 +3,7 @@ package com.romanowski.pedro.controller;
 import com.romanowski.pedro.controller.swagger.ClienteControllerSwagger;
 import com.romanowski.pedro.dto.request.ClienteRequestDTO;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
+import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.mapper.ClienteMapper;
 import com.romanowski.pedro.service.ClienteService;
 import org.springframework.http.HttpStatus;
@@ -28,25 +29,28 @@ public class ClienteController implements ClienteControllerSwagger {
     @Override
     public ResponseEntity<ClienteResponseDTO> cadastrarCliente(ClienteRequestDTO clienteRequestDTO) {
         var clienteEntity = clienteMapper.toEntity(clienteRequestDTO);
-        // TODO implementar a use case de salvar o cliente
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteMapper.toResponseDTO(clienteEntity));
+        var clienteSalvo = clienteService.cadastrarCliente(clienteEntity);
+        return ResponseEntity.status(HttpStatus.OK).body(clienteMapper.toResponseDTO(clienteSalvo));
     }
 
     @Override
     public ResponseEntity<List<ClienteResponseDTO>> listarClientes() {
-        // TODO implementar a use case de listar os clientes
-        return null;
+        List<Cliente> clientes = clienteService.listarClientes();
+        var clientesResponseDTO = clientes.stream()
+                .map(clienteMapper::toResponseDTO)
+                .toList();
+        return ResponseEntity.status(HttpStatus.OK).body(clientesResponseDTO);
     }
 
     @Override
     public ResponseEntity<ClienteResponseDTO> buscarClientePorId(Long id) {
-        // TODO implementar a use case de buscar cliente por ID
-        return null;
+        var cliente = clienteService.buscarClientePorId(id);
+        return ResponseEntity.status(HttpStatus.OK).body(clienteMapper.toResponseDTO(cliente));
     }
 
     @Override
     public ResponseEntity<Void> deletarCliente(Long id) {
-        // TODO implementar a use case de deletar cliente
-        return null;
+        clienteService.deletarCliente(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 }
