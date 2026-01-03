@@ -1,8 +1,8 @@
 package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Cliente;
-import com.romanowski.pedro.exceptions.ClienteNuloException;
 import com.romanowski.pedro.exceptions.EmailExistenteException;
+import com.romanowski.pedro.exceptions.ListaClientesVaziaException;
 import com.romanowski.pedro.exceptions.SenhaInvalidaExcpetion;
 import com.romanowski.pedro.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +22,9 @@ public class ClienteValidation {
     @Value("${cliente.senha.invalida}")
     private String mensagemSenhaInvalida;
 
+    @Value("${cliente.lista.vazia}")
+    private String mensagemListaVazia;
+
     public ClienteValidation(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
     }
@@ -29,6 +32,12 @@ public class ClienteValidation {
     public void validarCadastroCliente(Cliente cliente){
         validarExistenciaEmail(cliente.getEmail());
         validarSenhaCliente(cliente.getSenha());
+    }
+
+    public void validarListagemClientes(){
+        if (clienteRepository.findAll().isEmpty()) {
+            throw new ListaClientesVaziaException(mensagemListaVazia);
+        }
     }
 
 

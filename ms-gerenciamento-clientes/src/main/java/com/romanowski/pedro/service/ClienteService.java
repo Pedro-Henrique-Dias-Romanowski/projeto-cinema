@@ -36,7 +36,8 @@ public class ClienteService {
     }
 
     public List<Cliente> listarClientes(){
-        return null;
+        clienteValidation.validarListagemClientes();
+        return clienteRepository.findAll();
     }
 
     public void deletarCliente(Long id){
