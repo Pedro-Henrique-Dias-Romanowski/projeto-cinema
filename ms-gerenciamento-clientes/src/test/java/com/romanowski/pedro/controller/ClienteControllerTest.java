@@ -15,6 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -195,6 +198,112 @@ class ClienteControllerTest {
         // Assert
         assertNotNull(response);
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    @DisplayName("Deve listar todos os clientes com sucesso e retornar status 200")
+    void deveListarTodosClientesComSucesso() {
+        // Arrange
+        Cliente cliente1 = new Cliente();
+        cliente1.setId(1L);
+        cliente1.setNome("João Silva");
+        cliente1.setEmail("joao.silva@email.com");
+        cliente1.setSenha("$2a$10$encodedPassword");
+        cliente1.setSaldo(100.0);
+
+        Cliente cliente2 = new Cliente();
+        cliente2.setId(2L);
+        cliente2.setNome("Maria Santos");
+        cliente2.setEmail("maria.santos@email.com");
+        cliente2.setSenha("$2a$10$encodedPassword2");
+        cliente2.setSaldo(200.0);
+
+        Cliente cliente3 = new Cliente();
+        cliente3.setId(3L);
+        cliente3.setNome("Carlos Oliveira");
+        cliente3.setEmail("carlos.oliveira@email.com");
+        cliente3.setSenha("$2a$10$encodedPassword3");
+        cliente3.setSaldo(300.0);
+
+        List<Cliente> clientes = List.of(cliente1, cliente2, cliente3);
+
+        ClienteResponseDTO response1 = new ClienteResponseDTO(1L, "João Silva", "joao.silva@email.com", 100.0);
+        ClienteResponseDTO response2 = new ClienteResponseDTO(2L, "Maria Santos", "maria.santos@email.com", 200.0);
+        ClienteResponseDTO response3 = new ClienteResponseDTO(3L, "Carlos Oliveira", "carlos.oliveira@email.com", 300.0);
+
+        when(clienteService.listarClientes()).thenReturn(clientes);
+        when(clienteMapper.toResponseDTO(cliente1)).thenReturn(response1);
+        when(clienteMapper.toResponseDTO(cliente2)).thenReturn(response2);
+        when(clienteMapper.toResponseDTO(cliente3)).thenReturn(response3);
+
+        // Act
+        ResponseEntity<List<ClienteResponseDTO>> response = clienteController.listarClientes();
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(3, response.getBody().size());
+        assertEquals("João Silva", response.getBody().get(0).nome());
+        assertEquals("Maria Santos", response.getBody().get(1).nome());
+        assertEquals("Carlos Oliveira", response.getBody().get(2).nome());
+
+        verify(clienteService, times(1)).listarClientes();
+        verify(clienteMapper, times(1)).toResponseDTO(cliente1);
+        verify(clienteMapper, times(1)).toResponseDTO(cliente2);
+        verify(clienteMapper, times(1)).toResponseDTO(cliente3);
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há clientes cadastrados")
+    void deveRetornarListaVaziaQuandoNaoHaClientes() {
+        // Arrange
+        List<Cliente> clientesVazio = new ArrayList<>();
+        when(clienteService.listarClientes()).thenReturn(clientesVazio);
+
+        // Act
+        ResponseEntity<List<ClienteResponseDTO>> response = clienteController.listarClientes();
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isEmpty());
+        assertEquals(0, response.getBody().size());
+
+        verify(clienteService, times(1)).listarClientes();
+        verify(clienteMapper, never()).toResponseDTO(any(Cliente.class));
+    }
+
+    @Test
+    @DisplayName("Deve listar apenas um cliente quando há apenas um cadastrado")
+    void deveListarApenasUmCliente() {
+        // Arrange
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        cliente.setNome("João Silva");
+        cliente.setEmail("joao.silva@email.com");
+        cliente.setSenha("$2a$10$encodedPassword");
+        cliente.setSaldo(100.0);
+
+        List<Cliente> clientes = List.of(cliente);
+        ClienteResponseDTO responseDTO = new ClienteResponseDTO(1L, "João Silva", "joao.silva@email.com", 100.0);
+
+        when(clienteService.listarClientes()).thenReturn(clientes);
+        when(clienteMapper.toResponseDTO(cliente)).thenReturn(responseDTO);
+
+        // Act
+        ResponseEntity<List<ClienteResponseDTO>> response = clienteController.listarClientes();
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals("João Silva", response.getBody().get(0).nome());
+
+        verify(clienteService, times(1)).listarClientes();
+        verify(clienteMapper, times(1)).toResponseDTO(cliente);
     }
 }
 

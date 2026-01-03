@@ -2,6 +2,7 @@ package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.exceptions.EmailExistenteException;
+import com.romanowski.pedro.exceptions.ListaClientesVaziaException;
 import com.romanowski.pedro.exceptions.SenhaInvalidaExcpetion;
 import com.romanowski.pedro.repository.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,6 +37,7 @@ class ClienteValidationTest {
         ReflectionTestUtils.setField(clienteValidation, "mensagemEmailExistente", "Email já cadastrado no sistema");
         ReflectionTestUtils.setField(clienteValidation, "mensagemClienteNulo", "Cliente não pode ser nulo");
         ReflectionTestUtils.setField(clienteValidation, "mensagemSenhaInvalida", "Senha deve ter entre 6 e 15 caracteres");
+        ReflectionTestUtils.setField(clienteValidation, "mensagemListaVazia", "Não há clientes cadastrados no sistema");
 
         cliente = new Cliente();
         cliente.setNome("João Silva");
@@ -191,5 +196,82 @@ class ClienteValidationTest {
         // Act & Assert
         assertDoesNotThrow(() -> clienteValidation.validarCadastroCliente(cliente));
     }
+
+    @Test
+    @DisplayName("Deve validar listagem com sucesso quando há clientes cadastrados")
+    void deveValidarListagemComSucessoQuandoHaClientes() {
+        // Arrange
+        Cliente cliente1 = new Cliente();
+        cliente1.setId(1L);
+        cliente1.setNome("João Silva");
+        cliente1.setEmail("joao.silva@email.com");
+        cliente1.setSaldo(100.0);
+
+        Cliente cliente2 = new Cliente();
+        cliente2.setId(2L);
+        cliente2.setNome("Maria Santos");
+        cliente2.setEmail("maria.santos@email.com");
+        cliente2.setSaldo(200.0);
+
+        List<Cliente> clientes = List.of(cliente1, cliente2);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> clienteValidation.validarListagemClientes());
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve lançar ListaClientesVaziaException quando não há clientes cadastrados")
+    void deveLancarExcecaoQuandoListaVazia() {
+        // Arrange
+        List<Cliente> listaVazia = new ArrayList<>();
+        when(clienteRepository.findAll()).thenReturn(listaVazia);
+
+        // Act & Assert
+        ListaClientesVaziaException exception = assertThrows(
+                ListaClientesVaziaException.class,
+                () -> clienteValidation.validarListagemClientes()
+        );
+
+        assertEquals("Não há clientes cadastrados no sistema", exception.getMessage());
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve validar listagem quando há apenas um cliente cadastrado")
+    void deveValidarListagemComApenasUmCliente() {
+        // Arrange
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        cliente.setNome("João Silva");
+        cliente.setEmail("joao.silva@email.com");
+        cliente.setSaldo(100.0);
+
+        List<Cliente> clientes = List.of(cliente);
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> clienteValidation.validarListagemClientes());
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando lista retornada está vazia")
+    void deveLancarExcecaoQuandoListaRetornadaEstaVazia() {
+        // Arrange
+        when(clienteRepository.findAll()).thenReturn(new ArrayList<>());
+
+        // Act & Assert
+        ListaClientesVaziaException exception = assertThrows(
+                ListaClientesVaziaException.class,
+                () -> clienteValidation.validarListagemClientes()
+        );
+
+        assertNotNull(exception);
+        assertEquals("Não há clientes cadastrados no sistema", exception.getMessage());
+    }
+
 }
+
 

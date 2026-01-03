@@ -9,11 +9,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -261,5 +263,168 @@ class ClienteServiceTest {
         assertNotNull(resultado);
         verify(passwordEncoder, times(1)).encode("senha123456789A");
     }
+
+    @Test
+    @DisplayName("Deve listar todos os clientes com sucesso")
+    void deveListarTodosClientesComSucesso() {
+        // Arrange
+        Cliente cliente1 = new Cliente();
+        cliente1.setId(1L);
+        cliente1.setNome("João Silva");
+        cliente1.setEmail("joao.silva@email.com");
+        cliente1.setSenha("$2a$10$encodedPassword");
+        cliente1.setSaldo(100.0);
+
+        Cliente cliente2 = new Cliente();
+        cliente2.setId(2L);
+        cliente2.setNome("Maria Santos");
+        cliente2.setEmail("maria.santos@email.com");
+        cliente2.setSenha("$2a$10$encodedPassword2");
+        cliente2.setSaldo(200.0);
+
+        Cliente cliente3 = new Cliente();
+        cliente3.setId(3L);
+        cliente3.setNome("Carlos Oliveira");
+        cliente3.setEmail("carlos.oliveira@email.com");
+        cliente3.setSenha("$2a$10$encodedPassword3");
+        cliente3.setSaldo(300.0);
+
+        List<Cliente> clientes = List.of(cliente1, cliente2, cliente3);
+
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act
+        List<Cliente> resultado = clienteService.listarClientes();
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(3, resultado.size());
+        assertEquals("João Silva", resultado.get(0).getNome());
+        assertEquals("Maria Santos", resultado.get(1).getNome());
+        assertEquals("Carlos Oliveira", resultado.get(2).getNome());
+        assertEquals(100.0, resultado.get(0).getSaldo());
+        assertEquals(200.0, resultado.get(1).getSaldo());
+        assertEquals(300.0, resultado.get(2).getSaldo());
+
+        verify(clienteValidation, times(1)).validarListagemClientes();
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve chamar validação antes de listar clientes")
+    void deveChamarValidacaoAntesDeListar() {
+        // Arrange
+        List<Cliente> clientes = new ArrayList<>();
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act
+        clienteService.listarClientes();
+
+        // Assert
+        verify(clienteValidation, times(1)).validarListagemClientes();
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há clientes cadastrados")
+    void deveRetornarListaVaziaQuandoNaoHaClientes() {
+        // Arrange
+        List<Cliente> clientesVazio = new ArrayList<>();
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientesVazio);
+
+        // Act
+        List<Cliente> resultado = clienteService.listarClientes();
+
+        // Assert
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.size());
+
+        verify(clienteValidation, times(1)).validarListagemClientes();
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve listar apenas um cliente quando há apenas um cadastrado")
+    void deveListarApenasUmCliente() {
+        // Arrange
+        Cliente cliente = new Cliente();
+        cliente.setId(1L);
+        cliente.setNome("João Silva");
+        cliente.setEmail("joao.silva@email.com");
+        cliente.setSenha("$2a$10$encodedPassword");
+        cliente.setSaldo(100.0);
+
+        List<Cliente> clientes = List.of(cliente);
+
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act
+        List<Cliente> resultado = clienteService.listarClientes();
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals("João Silva", resultado.get(0).getNome());
+        assertEquals("joao.silva@email.com", resultado.get(0).getEmail());
+        assertEquals(100.0, resultado.get(0).getSaldo());
+
+        verify(clienteValidation, times(1)).validarListagemClientes();
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve listar clientes com saldos diferentes")
+    void deveListarClientesComSaldosDiferentes() {
+        // Arrange
+        Cliente clienteSaldoZero = new Cliente();
+        clienteSaldoZero.setId(1L);
+        clienteSaldoZero.setNome("Cliente Saldo Zero");
+        clienteSaldoZero.setEmail("zero@email.com");
+        clienteSaldoZero.setSaldo(0.0);
+
+        Cliente clienteSaldoMaximo = new Cliente();
+        clienteSaldoMaximo.setId(2L);
+        clienteSaldoMaximo.setNome("Cliente Saldo Máximo");
+        clienteSaldoMaximo.setEmail("maximo@email.com");
+        clienteSaldoMaximo.setSaldo(1000.0);
+
+        List<Cliente> clientes = List.of(clienteSaldoZero, clienteSaldoMaximo);
+
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientes);
+
+        // Act
+        List<Cliente> resultado = clienteService.listarClientes();
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        assertEquals(0.0, resultado.get(0).getSaldo());
+        assertEquals(1000.0, resultado.get(1).getSaldo());
+
+        verify(clienteValidation, times(1)).validarListagemClientes();
+        verify(clienteRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista não nula mesmo quando vazia")
+    void deveRetornarListaNaoNulaMesmoQuandoVazia() {
+        // Arrange
+        List<Cliente> clientesVazio = new ArrayList<>();
+        doNothing().when(clienteValidation).validarListagemClientes();
+        when(clienteRepository.findAll()).thenReturn(clientesVazio);
+
+        // Act
+        List<Cliente> resultado = clienteService.listarClientes();
+
+        // Assert
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
 }
+
 
