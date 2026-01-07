@@ -35,7 +35,6 @@ class ClienteValidationTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(clienteValidation, "mensagemEmailExistente", "Email já cadastrado no sistema");
-        ReflectionTestUtils.setField(clienteValidation, "mensagemClienteNulo", "Cliente não pode ser nulo");
         ReflectionTestUtils.setField(clienteValidation, "mensagemSenhaInvalida", "Senha deve ter entre 6 e 15 caracteres");
         ReflectionTestUtils.setField(clienteValidation, "mensagemListaVazia", "Não há clientes cadastrados no sistema");
 
