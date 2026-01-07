@@ -1,6 +1,7 @@
 package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Cliente;
+import com.romanowski.pedro.exceptions.ClienteInexistenteException;
 import com.romanowski.pedro.exceptions.EmailExistenteException;
 import com.romanowski.pedro.exceptions.ListaClientesVaziaException;
 import com.romanowski.pedro.exceptions.SenhaInvalidaExcpetion;
@@ -22,6 +23,9 @@ public class ClienteValidation {
     @Value("${cliente.lista.vazia}")
     private String mensagemListaVazia;
 
+    @Value("${cliente.inexistente}")
+    private String mensagemClienteInexistente;
+
     public ClienteValidation(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
     }
@@ -34,6 +38,12 @@ public class ClienteValidation {
     public void validarListagemClientes(){
         if (clienteRepository.findAll().isEmpty()) {
             throw new ListaClientesVaziaException(mensagemListaVazia);
+        }
+    }
+
+    public void validarBuscaPorCliente(Long id){
+        if (clienteRepository.findById(id).isEmpty()){
+            throw new ClienteInexistenteException(mensagemClienteInexistente);
         }
     }
 

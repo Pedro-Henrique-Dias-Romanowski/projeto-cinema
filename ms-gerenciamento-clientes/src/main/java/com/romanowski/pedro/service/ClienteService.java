@@ -42,6 +42,7 @@ public class ClienteService {
     }
 
     public void deletarCliente(Long id){
-
+        clienteValidation.validarBuscaPorCliente(id);
+        clienteRepository.deleteById(id);
     }
 }
