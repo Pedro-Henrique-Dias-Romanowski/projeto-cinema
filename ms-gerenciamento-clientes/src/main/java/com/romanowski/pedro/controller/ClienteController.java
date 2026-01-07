@@ -45,7 +45,7 @@ public class ClienteController implements ClienteControllerSwagger {
     @Override
     public ResponseEntity<ClienteResponseDTO> buscarClientePorId(Long id) {
         var cliente = clienteService.buscarClientePorId(id);
-        return ResponseEntity.status(HttpStatus.OK).body(clienteMapper.toResponseDTO(cliente));
+        return cliente.isPresent() ? ResponseEntity.status(HttpStatus.OK).body(clienteMapper.entityToResponseDTO(cliente)) : ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
     @Override

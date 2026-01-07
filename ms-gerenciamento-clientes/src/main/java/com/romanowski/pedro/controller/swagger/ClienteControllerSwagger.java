@@ -17,7 +17,7 @@ public interface ClienteControllerSwagger {
     ResponseEntity<List<ClienteResponseDTO>> listarClientes();
 
     @GetMapping("/clientes/{id}")
-    ResponseEntity<ClienteResponseDTO> buscarClientePorId(@PathVariable Long id);
+    ResponseEntity<ClienteResponseDTO> buscarClientePorId(@PathVariable @Valid Long id);
 
     @DeleteMapping("/clientes/{id}")
     ResponseEntity<Void> deletarCliente(@PathVariable Long id);

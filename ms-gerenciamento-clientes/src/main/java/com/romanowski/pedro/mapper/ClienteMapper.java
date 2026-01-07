@@ -5,9 +5,14 @@ import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.Cliente;
 import org.mapstruct.Mapper;
 
+import java.util.Optional;
+
 @Mapper(componentModel = "spring")
 public interface ClienteMapper {
 
     Cliente toEntity(ClienteRequestDTO dto);
     ClienteResponseDTO toResponseDTO(Cliente cliente);
+    default ClienteResponseDTO entityToResponseDTO(Optional<Cliente> livroEntity){
+        return livroEntity.map(this::toResponseDTO).orElse(null);
+    }
 }

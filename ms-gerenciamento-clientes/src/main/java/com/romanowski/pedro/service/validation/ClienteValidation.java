@@ -16,9 +16,6 @@ public class ClienteValidation {
     @Value("${cliente.email.existente}")
     private String mensagemEmailExistente;
 
-    @Value("${cliente.objeto.nulo}")
-    private String mensagemClienteNulo;
-
     @Value("${cliente.senha.invalida}")
     private String mensagemSenhaInvalida;
 
