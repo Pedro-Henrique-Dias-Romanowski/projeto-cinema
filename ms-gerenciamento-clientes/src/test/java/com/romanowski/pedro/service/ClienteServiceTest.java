@@ -425,6 +425,20 @@ class ClienteServiceTest {
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
     }
-}
 
+    @Test
+    @DisplayName("Deve deletar cliente com sucesso")
+    void deveDeletarClienteComSucesso() {
+        // Arrange
+        Long clienteId = 1L;
+        doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
+        doNothing().when(clienteRepository).deleteById(clienteId);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> clienteService.deletarCliente(clienteId));
+
+        verify(clienteValidation, times(1)).validarBuscaPorCliente(clienteId);
+        verify(clienteRepository, times(1)).deleteById(clienteId);
+    }
+}
 

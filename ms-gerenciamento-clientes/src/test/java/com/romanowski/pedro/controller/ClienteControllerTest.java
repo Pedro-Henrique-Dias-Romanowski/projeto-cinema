@@ -305,5 +305,38 @@ class ClienteControllerTest {
         verify(clienteService, times(1)).listarClientes();
         verify(clienteMapper, times(1)).toResponseDTO(cliente);
     }
+
+    @Test
+    @DisplayName("Deve deletar cliente com sucesso e retornar status 204")
+    void deveDeletarClienteComSucesso() {
+        // Arrange
+        Long clienteId = 1L;
+        doNothing().when(clienteService).deletarCliente(clienteId);
+
+        // Act
+        ResponseEntity<Void> response = clienteController.deletarCliente(clienteId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
+
+        verify(clienteService, times(1)).deletarCliente(clienteId);
+    }
+
+    @Test
+    @DisplayName("Deve retornar ResponseEntity com corpo nulo ao deletar")
+    void deveRetornarResponseEntityComCorpoNuloAoDeletar() {
+        // Arrange
+        Long clienteId = 1L;
+        doNothing().when(clienteService).deletarCliente(clienteId);
+
+        // Act
+        ResponseEntity<Void> response = clienteController.deletarCliente(clienteId);
+
+        // Assert
+        assertNotNull(response);
+        assertNull(response.getBody());
+    }
 }
 

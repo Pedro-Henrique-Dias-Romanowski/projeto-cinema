@@ -271,6 +271,56 @@ class ClienteValidationTest {
         assertEquals("Não há clientes cadastrados no sistema", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("Deve validar busca por cliente com sucesso quando cliente existe")
+    void deveValidarBuscaPorClienteComSucesso() {
+        // Arrange
+        Long clienteId = 1L;
+        ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
+        when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.of(cliente));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> clienteValidation.validarBuscaPorCliente(clienteId));
+        verify(clienteRepository, times(1)).findById(clienteId);
+    }
+
+    @Test
+    @DisplayName("Deve lançar ClienteInexistenteException quando cliente não existe")
+    void deveLancarExcecaoQuandoClienteNaoExiste() {
+        // Arrange
+        Long clienteId = 999L;
+        ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
+        when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        com.romanowski.pedro.exceptions.ClienteInexistenteException exception = assertThrows(
+                com.romanowski.pedro.exceptions.ClienteInexistenteException.class,
+                () -> clienteValidation.validarBuscaPorCliente(clienteId)
+        );
+
+        assertNotNull(exception);
+        assertEquals("Cliente não encontrado no sistema", exception.getMessage());
+        verify(clienteRepository, times(1)).findById(clienteId);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao validar busca por cliente inexistente com ID zero")
+    void deveLancarExcecaoAoValidarBuscaPorClienteComIdZero() {
+        // Arrange
+        Long clienteId = 0L;
+        ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
+        when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        com.romanowski.pedro.exceptions.ClienteInexistenteException exception = assertThrows(
+                com.romanowski.pedro.exceptions.ClienteInexistenteException.class,
+                () -> clienteValidation.validarBuscaPorCliente(clienteId)
+        );
+
+        assertNotNull(exception);
+        assertEquals("Cliente não encontrado no sistema", exception.getMessage());
+    }
+
 }
 
 
