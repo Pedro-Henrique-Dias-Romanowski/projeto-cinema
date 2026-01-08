@@ -26,7 +26,8 @@ public class FilmeService {
     }
 
     public List<Filme> listarFilmes(){
-        return List.of();
+        filmeValidation.validarListagemClientes();
+        return filmeRepository.findAll();
     }
 
     public Optional<Filme> buscarFilmePorId(Long id){

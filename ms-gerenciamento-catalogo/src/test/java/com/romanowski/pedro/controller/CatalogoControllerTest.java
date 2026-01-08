@@ -3,6 +3,7 @@ package com.romanowski.pedro.controller;
 import com.romanowski.pedro.dto.request.FilmeRequestDTO;
 import com.romanowski.pedro.dto.response.FilmeResponseDTO;
 import com.romanowski.pedro.entity.Filme;
+import com.romanowski.pedro.exceptions.ListaFilmesVaziaException;
 import com.romanowski.pedro.mapper.FilmeMapper;
 import com.romanowski.pedro.service.FilmeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +17,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Testes do CatalogoController")
 class CatalogoControllerTest {
 
     @Mock
@@ -38,9 +42,19 @@ class CatalogoControllerTest {
     private Filme filmeSalvo;
     private FilmeResponseDTO filmeResponseDTO;
 
+    // Dados para testes de listagem
+    private List<Filme> listaFilmes;
+    private List<FilmeResponseDTO> listaFilmesResponseDTO;
+    private Filme filme1;
+    private Filme filme2;
+    private Filme filme3;
+    private FilmeResponseDTO filmeResponseDTO1;
+    private FilmeResponseDTO filmeResponseDTO2;
+    private FilmeResponseDTO filmeResponseDTO3;
+
     @BeforeEach
     void setUp() {
-        // Preparando dados de teste
+        // Preparando dados de teste para cadastro
         filmeRequestDTO = new FilmeRequestDTO(
                 "O Poderoso Chefão",
                 175,
@@ -71,6 +85,68 @@ class CatalogoControllerTest {
                 "Francis Ford Coppola",
                 LocalDate.of(1972, 3, 24)
         );
+
+        // Preparando dados de teste para listagem - Filme 1
+        filme1 = new Filme();
+        filme1.setId(1L);
+        filme1.setTitulo("O Poderoso Chefão");
+        filme1.setDuracao(175);
+        filme1.setGenero("Drama");
+        filme1.setAutor("Francis Ford Coppola");
+        filme1.setDataLancamento(LocalDate.of(1972, 3, 24));
+
+        filmeResponseDTO1 = new FilmeResponseDTO(
+                "O Poderoso Chefão",
+                175,
+                "Drama",
+                "Francis Ford Coppola",
+                LocalDate.of(1972, 3, 24)
+        );
+
+        // Preparando dados de teste - Filme 2
+        filme2 = new Filme();
+        filme2.setId(2L);
+        filme2.setTitulo("Interestelar");
+        filme2.setDuracao(169);
+        filme2.setGenero("Ficção Científica");
+        filme2.setAutor("Christopher Nolan");
+        filme2.setDataLancamento(LocalDate.of(2014, 11, 7));
+
+        filmeResponseDTO2 = new FilmeResponseDTO(
+                "Interestelar",
+                169,
+                "Ficção Científica",
+                "Christopher Nolan",
+                LocalDate.of(2014, 11, 7)
+        );
+
+        // Preparando dados de teste - Filme 3
+        filme3 = new Filme();
+        filme3.setId(3L);
+        filme3.setTitulo("Matrix");
+        filme3.setDuracao(136);
+        filme3.setGenero("Ficção Científica");
+        filme3.setAutor("Wachowski");
+        filme3.setDataLancamento(LocalDate.of(1999, 3, 31));
+
+        filmeResponseDTO3 = new FilmeResponseDTO(
+                "Matrix",
+                136,
+                "Ficção Científica",
+                "Wachowski",
+                LocalDate.of(1999, 3, 31)
+        );
+
+        // Preparando listas
+        listaFilmes = new ArrayList<>();
+        listaFilmes.add(filme1);
+        listaFilmes.add(filme2);
+        listaFilmes.add(filme3);
+
+        listaFilmesResponseDTO = new ArrayList<>();
+        listaFilmesResponseDTO.add(filmeResponseDTO1);
+        listaFilmesResponseDTO.add(filmeResponseDTO2);
+        listaFilmesResponseDTO.add(filmeResponseDTO3);
     }
 
     @Test
@@ -115,5 +191,80 @@ class CatalogoControllerTest {
         assertNotNull(response.getBody());
         assertEquals(filmeResponseDTO, response.getBody());
     }
+
+    @Test
+    @DisplayName("Deve listar todos os filmes com sucesso e retornar status 200 OK")
+    void deveListarTodosOsFilmesComSucesso() {
+        // Arrange
+        when(filmeService.listarFilmes()).thenReturn(listaFilmes);
+        when(filmeMapper.toResponseDTO(filme1)).thenReturn(filmeResponseDTO1);
+        when(filmeMapper.toResponseDTO(filme2)).thenReturn(filmeResponseDTO2);
+        when(filmeMapper.toResponseDTO(filme3)).thenReturn(filmeResponseDTO3);
+
+        // Act
+        ResponseEntity<List<FilmeResponseDTO>> response = catalogoController.listarFilmes();
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(3, response.getBody().size());
+
+        verify(filmeService, times(1)).listarFilmes();
+        verify(filmeMapper, times(3)).toResponseDTO(any(Filme.class));
+    }
+
+    @Test
+    @DisplayName("Deve retornar filmes com todos os dados corretos")
+    void deveRetornarFilmesComDadosCorretos() {
+        // Arrange
+        when(filmeService.listarFilmes()).thenReturn(listaFilmes);
+        when(filmeMapper.toResponseDTO(filme1)).thenReturn(filmeResponseDTO1);
+        when(filmeMapper.toResponseDTO(filme2)).thenReturn(filmeResponseDTO2);
+        when(filmeMapper.toResponseDTO(filme3)).thenReturn(filmeResponseDTO3);
+
+        // Act
+        ResponseEntity<List<FilmeResponseDTO>> response = catalogoController.listarFilmes();
+
+        // Assert
+        List<FilmeResponseDTO> filmes = response.getBody();
+        assertNotNull(filmes);
+
+        // Verificar primeiro filme
+        assertEquals("O Poderoso Chefão", filmes.get(0).titulo());
+        assertEquals(175, filmes.get(0).duracao());
+        assertEquals("Drama", filmes.get(0).genero());
+        assertEquals("Francis Ford Coppola", filmes.get(0).autor());
+
+        // Verificar segundo filme
+        assertEquals("Interestelar", filmes.get(1).titulo());
+        assertEquals(169, filmes.get(1).duracao());
+        assertEquals("Ficção Científica", filmes.get(1).genero());
+        assertEquals("Christopher Nolan", filmes.get(1).autor());
+
+        // Verificar terceiro filme
+        assertEquals("Matrix", filmes.get(2).titulo());
+        assertEquals(136, filmes.get(2).duracao());
+        assertEquals("Ficção Científica", filmes.get(2).genero());
+        assertEquals("Wachowski", filmes.get(2).autor());
+    }
+
+    @Test
+    @DisplayName("Deve lançar ListaFilmesVaziaException quando a lista está vazia")
+    void deveLancarExcecaoQuandoListaVazia() {
+        // Arrange
+        when(filmeService.listarFilmes()).thenThrow(new ListaFilmesVaziaException("Nenhum filme encontrado no sistema"));
+
+        // Act & Assert
+        ListaFilmesVaziaException exception = assertThrows(
+                ListaFilmesVaziaException.class,
+                () -> catalogoController.listarFilmes()
+        );
+
+        assertEquals("Nenhum filme encontrado no sistema", exception.getMessage());
+        verify(filmeService, times(1)).listarFilmes();
+        verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
+    }
+
 }
 
