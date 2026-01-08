@@ -12,7 +12,7 @@ public interface ClienteMapper {
 
     Cliente toEntity(ClienteRequestDTO dto);
     ClienteResponseDTO toResponseDTO(Cliente cliente);
-    default ClienteResponseDTO entityToResponseDTO(Optional<Cliente> livroEntity){
-        return livroEntity.map(this::toResponseDTO).orElse(null);
+    default ClienteResponseDTO entityToResponseDTO(Optional<Cliente> clienteEntity){
+        return clienteEntity.map(this::toResponseDTO).orElse(null);
     }
 }
