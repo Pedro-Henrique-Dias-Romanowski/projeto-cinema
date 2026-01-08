@@ -11,12 +11,18 @@ import java.util.Optional;
 @Service
 public class FilmeService {
 
-    private FilmeValidation filmeValidation;
-    private FilmeRepository filmeRepository;
+    private final FilmeValidation filmeValidation;
+    private final FilmeRepository filmeRepository;
+
+    public FilmeService(FilmeValidation filmeValidation, FilmeRepository filmeRepository) {
+        this.filmeValidation = filmeValidation;
+        this.filmeRepository = filmeRepository;
+    }
 
 
     public Filme cadastrarFilme(Filme filme){
-        return null;
+        filmeValidation.validarCadastroFilme(filme);
+        return filmeRepository.save(filme);
     }
 
     public List<Filme> listarFilmes(){

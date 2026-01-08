@@ -18,10 +18,12 @@ public class Filme {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome;
+    private String titulo;
     private Integer duracao;
     private String genero;
     private String autor;
-    private LocalDate anoLancamento;
+
+    @Column(name = "data_lancamento")
+    private LocalDate dataLancamento;
 
 }

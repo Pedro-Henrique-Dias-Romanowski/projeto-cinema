@@ -1,4 +1,8 @@
 package com.romanowski.pedro.controller.exceptions;
 
-public record ErrorResponde() {
+import java.util.Date;
+
+public record ExceptionResponse(
+        Date timestamp, String message, String details
+) {
 }
