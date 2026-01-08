@@ -1,4 +1,18 @@
+server:
+  port: 8081
 spring:
   application:
     name:
       ms-gerenciamento-sessoes
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cinema_sessoes
+    username: root
+    password: 121105
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+    show-sql: false
+    open-in-view: false
