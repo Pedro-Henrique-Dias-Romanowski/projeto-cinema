@@ -42,7 +42,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
-    public ResponseEntity<FilmeResponseDTO> buscarFilme(Long id) {
+    public ResponseEntity<FilmeResponseDTO> buscarFilmePorId(Long id) {
         Optional<Filme> filme = filmeService.buscarFilmePorId(id);
         return ResponseEntity.status(HttpStatus.OK).body(filmeMapper.toResponseDTO(filme.orElse(null)));
     }

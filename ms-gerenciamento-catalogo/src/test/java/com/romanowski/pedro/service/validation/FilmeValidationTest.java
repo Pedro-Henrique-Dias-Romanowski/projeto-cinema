@@ -2,6 +2,7 @@ package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Filme;
 import com.romanowski.pedro.exceptions.FilmeExistenteException;
+import com.romanowski.pedro.exceptions.FilmeInexistenteException;
 import com.romanowski.pedro.exceptions.ListaFilmesVaziaException;
 import com.romanowski.pedro.repository.FilmeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +44,7 @@ class FilmeValidationTest {
         // Injetando as mensagens de erro através de reflection (simulando @Value)
         ReflectionTestUtils.setField(filmeValidation, "mensagemFilmeExistente", "Filme já cadastrado no sistema");
         ReflectionTestUtils.setField(filmeValidation, "mensagemListaFilmesVazia", "Nenhum filme encontrado no sistema");
+        ReflectionTestUtils.setField(filmeValidation, "mensagemFilmeInexistente", "Filme não encontrado no sistema");
 
         // Preparando dados de teste
         filme = new Filme();
@@ -254,6 +255,104 @@ class FilmeValidationTest {
         // Assert
         assertEquals(tamanhoOriginal, listaOriginal.size());
     }
+
+    @Test
+    @DisplayName("Deve validar busca com sucesso quando o filme existe")
+    void deveValidarBuscaComSucessoQuandoFilmeExiste() {
+        // Arrange
+        Long id = 1L;
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filme));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> filmeValidation.validarBuscaPorFilme(id));
+        verify(filmeRepository, times(1)).findById(id);
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não existe")
+    void deveLancarExcecaoQuandoFilmeNaoExistePorId() {
+        // Arrange
+        Long id = 999L;
+        when(filmeRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeValidation.validarBuscaPorFilme(id)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeRepository, times(1)).findById(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção com mensagem correta quando filme não existe")
+    void deveLancarExcecaoComMensagemCorretaAoBuscarPorId() {
+        // Arrange
+        Long id = 100L;
+        when(filmeRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeValidation.validarBuscaPorFilme(id)
+        );
+
+        assertNotNull(exception.getMessage());
+        assertTrue(exception.getMessage().contains("não encontrado"));
+    }
+
+    @Test
+    @DisplayName("Deve validar diferentes IDs de filmes existentes")
+    void deveValidarDiferentesIdsDeFilmesExistentes() {
+        // Arrange
+        Filme filme1Test = new Filme();
+        filme1Test.setId(1L);
+        filme1Test.setTitulo("Filme 1");
+
+        Filme filme2Test = new Filme();
+        filme2Test.setId(2L);
+        filme2Test.setTitulo("Filme 2");
+
+        when(filmeRepository.findById(1L)).thenReturn(Optional.of(filme1Test));
+        when(filmeRepository.findById(2L)).thenReturn(Optional.of(filme2Test));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> filmeValidation.validarBuscaPorFilme(1L));
+        assertDoesNotThrow(() -> filmeValidation.validarBuscaPorFilme(2L));
+        verify(filmeRepository, times(1)).findById(1L);
+        verify(filmeRepository, times(1)).findById(2L);
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção quando buscar Optional vazio")
+    void deveLancarExcecaoQuandoBuscarOptionalVazio() {
+        // Arrange
+        Long id = 50L;
+        when(filmeRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class, () -> filmeValidation.validarBuscaPorFilme(id));
+        verify(filmeRepository, times(1)).findById(id);
+    }
+
+    @Test
+    @DisplayName("Não deve fazer outras operações no repositório além de findById")
+    void naoDeveFazerOutrasOperacoesNoRepositorioAoBuscar() {
+        // Arrange
+        Long id = 1L;
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filme));
+
+        // Act
+        filmeValidation.validarBuscaPorFilme(id);
+
+        // Assert
+        verify(filmeRepository, times(1)).findById(id);
+        verifyNoMoreInteractions(filmeRepository);
+    }
 }
+
 
 

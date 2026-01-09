@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 
 public record FilmeResponseDTO(
+        Long id,
         String titulo,
         Integer duracao,
         String genero,

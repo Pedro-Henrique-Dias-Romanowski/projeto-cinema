@@ -31,7 +31,8 @@ public class FilmeService {
     }
 
     public Optional<Filme> buscarFilmePorId(Long id){
-        return null;
+        filmeValidation.validarBuscaPorFilme(id);
+        return filmeRepository.findById(id);
     }
 
     public Filme atualizarFilme(Long id, Filme filme){

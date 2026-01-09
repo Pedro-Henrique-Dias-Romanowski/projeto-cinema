@@ -2,6 +2,7 @@ package com.romanowski.pedro.service;
 
 import com.romanowski.pedro.entity.Filme;
 import com.romanowski.pedro.exceptions.FilmeExistenteException;
+import com.romanowski.pedro.exceptions.FilmeInexistenteException;
 import com.romanowski.pedro.exceptions.ListaFilmesVaziaException;
 import com.romanowski.pedro.repository.FilmeRepository;
 import com.romanowski.pedro.service.validation.FilmeValidation;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -247,6 +249,124 @@ class FilmeServiceTest {
         // Assert
         verify(filmeValidation, times(1)).validarListagemClientes();
     }
+
+    // ========== TESTES DO MÉTODO BUSCAR FILME POR ID ==========
+
+    @Test
+    @DisplayName("Deve buscar filme por ID com sucesso quando o filme existe")
+    void deveBuscarFilmePorIdComSucesso() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filmeSalvo));
+
+        // Act
+        Optional<Filme> resultado = filmeService.buscarFilmePorId(id);
+
+        // Assert
+        assertTrue(resultado.isPresent());
+        assertEquals(1L, resultado.get().getId());
+        assertEquals("O Poderoso Chefão", resultado.get().getTitulo());
+        assertEquals(175, resultado.get().getDuracao());
+        assertEquals("Drama", resultado.get().getGenero());
+        assertEquals("Francis Ford Coppola", resultado.get().getAutor());
+
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, times(1)).findById(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar Optional com filme quando encontrado")
+    void deveRetornarOptionalComFilmeQuandoEncontrado() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filmeSalvo));
+
+        // Act
+        Optional<Filme> resultado = filmeService.buscarFilmePorId(id);
+
+        // Assert
+        assertTrue(resultado.isPresent());
+        assertEquals(filmeSalvo, resultado.get());
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não existe")
+    void deveLancarExcecaoQuandoFilmeNaoExiste() {
+        // Arrange
+        Long id = 999L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.buscarFilmePorId(id)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, never()).findById(any(Long.class));
+    }
+
+    @Test
+    @DisplayName("Não deve buscar no repositório quando a validação falha")
+    void naoDeveBuscarNoRepositorioQuandoValidacaoFalha() {
+        // Arrange
+        Long id = 999L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class, () -> filmeService.buscarFilmePorId(id));
+        verify(filmeRepository, never()).findById(any(Long.class));
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar filme com todos os dados corretos ao buscar por ID")
+    void deveRetornarFilmeComTodosDadosCorretosAoBuscar() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filmeSalvo));
+
+        // Act
+        Optional<Filme> resultado = filmeService.buscarFilmePorId(id);
+
+        // Assert
+        assertTrue(resultado.isPresent());
+        Filme filme = resultado.get();
+        assertEquals(1L, filme.getId());
+        assertEquals("O Poderoso Chefão", filme.getTitulo());
+        assertEquals(175, filme.getDuracao());
+        assertEquals("Drama", filme.getGenero());
+        assertEquals("Francis Ford Coppola", filme.getAutor());
+        assertEquals(LocalDate.of(1972, 3, 24), filme.getDataLancamento());
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção com mensagem correta quando filme não existe")
+    void deveLancarExcecaoComMensagemCorretaQuandoNaoExiste() {
+        // Arrange
+        Long id = 100L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.buscarFilmePorId(id)
+        );
+
+        assertNotNull(exception.getMessage());
+        assertTrue(exception.getMessage().contains("não encontrado"));
+    }
+
 }
+
 
 

@@ -3,6 +3,7 @@ package com.romanowski.pedro.controller;
 import com.romanowski.pedro.dto.request.FilmeRequestDTO;
 import com.romanowski.pedro.dto.response.FilmeResponseDTO;
 import com.romanowski.pedro.entity.Filme;
+import com.romanowski.pedro.exceptions.FilmeInexistenteException;
 import com.romanowski.pedro.exceptions.ListaFilmesVaziaException;
 import com.romanowski.pedro.mapper.FilmeMapper;
 import com.romanowski.pedro.service.FilmeService;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -79,6 +81,7 @@ class CatalogoControllerTest {
         filmeSalvo.setDataLancamento(LocalDate.of(1972, 3, 24));
 
         filmeResponseDTO = new FilmeResponseDTO(
+                1L,
                 "O Poderoso Chefão",
                 175,
                 "Drama",
@@ -96,6 +99,7 @@ class CatalogoControllerTest {
         filme1.setDataLancamento(LocalDate.of(1972, 3, 24));
 
         filmeResponseDTO1 = new FilmeResponseDTO(
+                1L,
                 "O Poderoso Chefão",
                 175,
                 "Drama",
@@ -113,6 +117,7 @@ class CatalogoControllerTest {
         filme2.setDataLancamento(LocalDate.of(2014, 11, 7));
 
         filmeResponseDTO2 = new FilmeResponseDTO(
+                2L,
                 "Interestelar",
                 169,
                 "Ficção Científica",
@@ -130,6 +135,7 @@ class CatalogoControllerTest {
         filme3.setDataLancamento(LocalDate.of(1999, 3, 31));
 
         filmeResponseDTO3 = new FilmeResponseDTO(
+                3L,
                 "Matrix",
                 136,
                 "Ficção Científica",
@@ -164,6 +170,7 @@ class CatalogoControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
+        assertEquals(1L, response.getBody().id());
         assertEquals("O Poderoso Chefão", response.getBody().titulo());
         assertEquals(175, response.getBody().duracao());
         assertEquals("Drama", response.getBody().genero());
@@ -231,18 +238,21 @@ class CatalogoControllerTest {
         assertNotNull(filmes);
 
         // Verificar primeiro filme
+        assertEquals(1L, filmes.get(0).id());
         assertEquals("O Poderoso Chefão", filmes.get(0).titulo());
         assertEquals(175, filmes.get(0).duracao());
         assertEquals("Drama", filmes.get(0).genero());
         assertEquals("Francis Ford Coppola", filmes.get(0).autor());
 
         // Verificar segundo filme
+        assertEquals(2L, filmes.get(1).id());
         assertEquals("Interestelar", filmes.get(1).titulo());
         assertEquals(169, filmes.get(1).duracao());
         assertEquals("Ficção Científica", filmes.get(1).genero());
         assertEquals("Christopher Nolan", filmes.get(1).autor());
 
         // Verificar terceiro filme
+        assertEquals(3L, filmes.get(2).id());
         assertEquals("Matrix", filmes.get(2).titulo());
         assertEquals(136, filmes.get(2).duracao());
         assertEquals("Ficção Científica", filmes.get(2).genero());
@@ -266,5 +276,114 @@ class CatalogoControllerTest {
         verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
     }
 
+
+    @Test
+    @DisplayName("Deve buscar filme por ID com sucesso e retornar status 200 OK")
+    void devebuscarFilmePorIdPorIdComSucesso() {
+        // Arrange
+        Long id = 1L;
+        when(filmeService.buscarFilmePorId(id)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeMapper.toResponseDTO(filmeSalvo)).thenReturn(filmeResponseDTO);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.buscarFilmePorId(id);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1L, response.getBody().id());
+        assertEquals("O Poderoso Chefão", response.getBody().titulo());
+        assertEquals(175, response.getBody().duracao());
+        assertEquals("Drama", response.getBody().genero());
+        assertEquals("Francis Ford Coppola", response.getBody().autor());
+
+        verify(filmeService, times(1)).buscarFilmePorId(id);
+        verify(filmeMapper, times(1)).toResponseDTO(filmeSalvo);
+    }
+
+    @Test
+    @DisplayName("Deve chamar o service para buscar filme por ID")
+    void deveChamarServiceParaBuscarPorId() {
+        // Arrange
+        Long id = 1L;
+        when(filmeService.buscarFilmePorId(id)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeMapper.toResponseDTO(any(Filme.class))).thenReturn(filmeResponseDTO);
+
+        // Act
+        catalogoController.buscarFilmePorId(id);
+
+        // Assert
+        verify(filmeService, times(1)).buscarFilmePorId(id);
+    }
+
+    @Test
+    @DisplayName("Deve converter filme encontrado para DTO de resposta")
+    void deveConverterFilmeEncontradoParaResponseDTO() {
+        // Arrange
+        Long id = 1L;
+        when(filmeService.buscarFilmePorId(id)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeMapper.toResponseDTO(filmeSalvo)).thenReturn(filmeResponseDTO);
+
+        // Act
+        catalogoController.buscarFilmePorId(id);
+
+        // Assert
+        verify(filmeMapper, times(1)).toResponseDTO(filmeSalvo);
+    }
+
+    @Test
+    @DisplayName("Deve retornar o filme no corpo da resposta quando encontrado")
+    void deveRetornarFilmeNaRespostaQuandoEncontrado() {
+        // Arrange
+        Long id = 1L;
+        when(filmeService.buscarFilmePorId(id)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeMapper.toResponseDTO(filmeSalvo)).thenReturn(filmeResponseDTO);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.buscarFilmePorId(id);
+
+        // Assert
+        assertNotNull(response.getBody());
+        assertEquals(filmeResponseDTO, response.getBody());
+    }
+    
+
+    @Test
+    @DisplayName("Deve processar Optional vazio corretamente")
+    void deveProcessarOptionalVazioCorretamente() {
+        // Arrange
+        Long id = 100L;
+        when(filmeService.buscarFilmePorId(id)).thenReturn(Optional.empty());
+        when(filmeMapper.toResponseDTO(null)).thenReturn(null);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.buscarFilmePorId(id);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não é encontrado")
+    void deveLancarExcecaoQuandoFilmeNaoExiste() {
+        // Arrange
+        Long id = 999L;
+        when(filmeService.buscarFilmePorId(id)).thenThrow(new FilmeInexistenteException("Filme não encontrado no sistema"));
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> catalogoController.buscarFilmePorId(id)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeService, times(1)).buscarFilmePorId(id);
+        verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
+    }
+
 }
+
 

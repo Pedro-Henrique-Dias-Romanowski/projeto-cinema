@@ -2,6 +2,7 @@ package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Filme;
 import com.romanowski.pedro.exceptions.FilmeExistenteException;
+import com.romanowski.pedro.exceptions.FilmeInexistenteException;
 import com.romanowski.pedro.exceptions.ListaFilmesVaziaException;
 import com.romanowski.pedro.repository.FilmeRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,9 @@ public class FilmeValidation {
     @Value("${mensagem.lista.filmes.vazia}")
     private String mensagemListaFilmesVazia;
 
+    @Value("{${mensagem.filme.inexistente}")
+    private String mensagemFilmeInexistente;
+
     public FilmeValidation(FilmeRepository filmeRepository) {
         this.filmeRepository = filmeRepository;
     }
@@ -31,6 +35,12 @@ public class FilmeValidation {
     public void validarListagemClientes(){
         if (filmeRepository.findAll().isEmpty()){
             throw new ListaFilmesVaziaException(mensagemListaFilmesVazia);
+        }
+    }
+
+    public void validarBuscaPorFilme(Long id){
+        if (filmeRepository.findById(id).isEmpty()){
+            throw new FilmeInexistenteException(mensagemFilmeInexistente);
         }
     }
 
