@@ -384,6 +384,55 @@ class CatalogoControllerTest {
         verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
     }
 
+    @Test
+    @DisplayName("Deve deletar filme com sucesso e retornar status 204 NO_CONTENT")
+    void deveDeletarFilmeComSucesso() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeService).deletarFilme(id);
+
+        // Act
+        ResponseEntity<Void> response = catalogoController.deletarFilme(id);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(filmeService, times(1)).deletarFilme(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar null no corpo da resposta ao deletar filme")
+    void deveRetornarNullNoCorpoAoDeletar() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeService).deletarFilme(id);
+
+        // Act
+        ResponseEntity<Void> response = catalogoController.deletarFilme(id);
+
+        // Assert
+        assertNull(response.getBody());
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando tentar deletar filme que não existe")
+    void deveLancarExcecaoAoDeletarFilmeInexistente() {
+        // Arrange
+        Long id = 999L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeService).deletarFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> catalogoController.deletarFilme(id)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeService, times(1)).deletarFilme(id);
+    }
 }
 
 

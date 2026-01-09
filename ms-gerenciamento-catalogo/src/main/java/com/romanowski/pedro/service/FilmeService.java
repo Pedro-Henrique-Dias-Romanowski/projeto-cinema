@@ -40,6 +40,7 @@ public class FilmeService {
     }
 
     public void deletarFilme(Long id){
-
+        filmeValidation.validarBuscaPorFilme(id);
+        filmeRepository.deleteById(id);
     }
 }
