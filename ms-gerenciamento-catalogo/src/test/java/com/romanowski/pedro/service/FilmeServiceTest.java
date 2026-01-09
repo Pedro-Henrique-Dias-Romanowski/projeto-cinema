@@ -250,7 +250,6 @@ class FilmeServiceTest {
         verify(filmeValidation, times(1)).validarListagemClientes();
     }
 
-    // ========== TESTES DO MÉTODO BUSCAR FILME POR ID ==========
 
     @Test
     @DisplayName("Deve buscar filme por ID com sucesso quando o filme existe")
@@ -366,7 +365,99 @@ class FilmeServiceTest {
         assertTrue(exception.getMessage().contains("não encontrado"));
     }
 
+
+    @Test
+    @DisplayName("Deve deletar filme com sucesso quando o filme existe")
+    void deveDeletarFilmeComSucesso() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        doNothing().when(filmeRepository).deleteById(id);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> filmeService.deletarFilme(id));
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, times(1)).deleteById(id);
+    }
+
+    @Test
+    @DisplayName("Deve chamar a validação antes de deletar o filme")
+    void deveChamarValidacaoAntesDeDeletar() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        doNothing().when(filmeRepository).deleteById(id);
+
+        // Act
+        filmeService.deletarFilme(id);
+
+        // Assert
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando tentar deletar filme que não existe")
+    void deveLancarExcecaoAoDeletarFilmeInexistente() {
+        // Arrange
+        Long id = 999L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.deletarFilme(id)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, never()).deleteById(any(Long.class));
+    }
+
+    @Test
+    @DisplayName("Não deve deletar no repositório quando a validação falha")
+    void naoDeveDeletarQuandoValidacaoFalha() {
+        // Arrange
+        Long id = 999L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class, () -> filmeService.deletarFilme(id));
+        verify(filmeRepository, never()).deleteById(any(Long.class));
+    }
+
+    @Test
+    @DisplayName("Deve deletar filme no repositório apenas uma vez")
+    void deveDeletarFilmeApenasUmaVez() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        doNothing().when(filmeRepository).deleteById(id);
+
+        // Act
+        filmeService.deletarFilme(id);
+
+        // Assert
+        verify(filmeRepository, times(1)).deleteById(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção com mensagem correta ao deletar filme inexistente")
+    void deveLancarExcecaoComMensagemCorretaAoDeletar() {
+        // Arrange
+        Long id = 100L;
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.deletarFilme(id)
+        );
+
+        assertNotNull(exception.getMessage());
+        assertTrue(exception.getMessage().contains("não encontrado"));
+    }
 }
-
-
-
