@@ -460,4 +460,93 @@ class FilmeServiceTest {
         assertNotNull(exception.getMessage());
         assertTrue(exception.getMessage().contains("não encontrado"));
     }
+
+    @Test
+    @DisplayName("Deve atualizar filme com sucesso quando o filme existe")
+    void deveAtualizarFilmeComSucesso() {
+        // Arrange
+        Long id = 1L;
+        Filme filmeAtualizado = new Filme();
+        filmeAtualizado.setTitulo("O Poderoso Chefão - Edição Especial");
+        filmeAtualizado.setDuracao(180);
+        filmeAtualizado.setGenero("Drama/Crime");
+        filmeAtualizado.setAutor("Francis Ford Coppola");
+        filmeAtualizado.setDataLancamento(LocalDate.of(1972, 3, 24));
+
+        Filme filmeComIdAtualizado = new Filme();
+        filmeComIdAtualizado.setId(1L);
+        filmeComIdAtualizado.setTitulo("O Poderoso Chefão - Edição Especial");
+        filmeComIdAtualizado.setDuracao(180);
+        filmeComIdAtualizado.setGenero("Drama/Crime");
+        filmeComIdAtualizado.setAutor("Francis Ford Coppola");
+        filmeComIdAtualizado.setDataLancamento(LocalDate.of(1972, 3, 24));
+
+        doNothing().when(filmeValidation).validarBuscaPorFilme(id);
+        when(filmeRepository.findById(id)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeRepository.save(any(Filme.class))).thenReturn(filmeComIdAtualizado);
+
+        // Act
+        Filme resultado = filmeService.atualizarFilme(id, filmeAtualizado);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+        assertEquals("O Poderoso Chefão - Edição Especial", resultado.getTitulo());
+        assertEquals(180, resultado.getDuracao());
+        assertEquals("Drama/Crime", resultado.getGenero());
+        assertEquals("Francis Ford Coppola", resultado.getAutor());
+        assertEquals(LocalDate.of(1972, 3, 24), resultado.getDataLancamento());
+
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, times(1)).findById(id);
+        verify(filmeRepository, times(1)).save(any(Filme.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando tentar atualizar filme que não existe")
+    void deveLancarExcecaoAoAtualizarFilmeInexistente() {
+        // Arrange
+        Long id = 999L;
+        Filme filmeAtualizado = new Filme();
+        filmeAtualizado.setTitulo("Filme Inexistente");
+        filmeAtualizado.setDuracao(120);
+        filmeAtualizado.setGenero("Ação");
+        filmeAtualizado.setAutor("Autor Qualquer");
+        filmeAtualizado.setDataLancamento(LocalDate.of(2020, 1, 1));
+
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.atualizarFilme(id, filmeAtualizado)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeValidation, times(1)).validarBuscaPorFilme(id);
+        verify(filmeRepository, never()).findById(any(Long.class));
+        verify(filmeRepository, never()).save(any(Filme.class));
+    }
+
+    @Test
+    @DisplayName("Não deve buscar nem salvar no repositório quando a validação falha")
+    void naoDeveBuscarNemSalvarQuandoValidacaoFalhaAoAtualizar() {
+        // Arrange
+        Long id = 999L;
+        Filme filmeAtualizado = new Filme();
+        filmeAtualizado.setTitulo("Filme Teste");
+        filmeAtualizado.setDuracao(90);
+        filmeAtualizado.setGenero("Terror");
+        filmeAtualizado.setAutor("Autor Teste");
+        filmeAtualizado.setDataLancamento(LocalDate.of(2021, 5, 15));
+
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilme(id);
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class, () -> filmeService.atualizarFilme(id, filmeAtualizado));
+        verify(filmeRepository, never()).findById(any(Long.class));
+        verify(filmeRepository, never()).save(any(Filme.class));
+    }
 }

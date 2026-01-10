@@ -36,7 +36,10 @@ public class FilmeService {
     }
 
     public Filme atualizarFilme(Long id, Filme filme){
-        return null;
+        filmeValidation.validarBuscaPorFilme(id);
+        Filme filmeExistente = filmeRepository.findById(id).get();
+        filme.setId(filmeExistente.getId());
+        return filmeRepository.save(filme);
     }
 
     public void deletarFilme(Long id){

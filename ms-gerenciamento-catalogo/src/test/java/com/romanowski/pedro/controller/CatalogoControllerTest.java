@@ -1,5 +1,6 @@
 package com.romanowski.pedro.controller;
 
+import com.romanowski.pedro.dto.request.FilmeAtualizacaoRequestDTO;
 import com.romanowski.pedro.dto.request.FilmeRequestDTO;
 import com.romanowski.pedro.dto.response.FilmeResponseDTO;
 import com.romanowski.pedro.entity.Filme;
@@ -433,6 +434,133 @@ class CatalogoControllerTest {
         assertEquals("Filme não encontrado no sistema", exception.getMessage());
         verify(filmeService, times(1)).deletarFilme(id);
     }
+
+    @Test
+    @DisplayName("Deve atualizar filme com sucesso e retornar status 200 OK")
+    void deveAtualizarFilmeComSucesso() {
+        // Arrange
+        Long id = 1L;
+        FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO = new FilmeAtualizacaoRequestDTO(
+                "O Poderoso Chefão Parte II",
+                200,
+                "Drama",
+                "Francis Ford Coppola",
+                LocalDate.of(1974, 12, 20)
+        );
+
+        Filme filmeParaSerAtualizado = new Filme();
+        filmeParaSerAtualizado.setTitulo("O Poderoso Chefão Parte II");
+        filmeParaSerAtualizado.setDuracao(200);
+        filmeParaSerAtualizado.setGenero("Drama");
+        filmeParaSerAtualizado.setAutor("Francis Ford Coppola");
+        filmeParaSerAtualizado.setDataLancamento(LocalDate.of(1974, 12, 20));
+
+        Filme filmeAtualizado = new Filme();
+        filmeAtualizado.setId(id);
+        filmeAtualizado.setTitulo("O Poderoso Chefão Parte II");
+        filmeAtualizado.setDuracao(200);
+        filmeAtualizado.setGenero("Drama");
+        filmeAtualizado.setAutor("Francis Ford Coppola");
+        filmeAtualizado.setDataLancamento(LocalDate.of(1974, 12, 20));
+
+        FilmeResponseDTO filmeResponseDTOAtualizado = new FilmeResponseDTO(
+                id,
+                "O Poderoso Chefão Parte II",
+                200,
+                "Drama",
+                "Francis Ford Coppola",
+                LocalDate.of(1974, 12, 20)
+        );
+
+        when(filmeMapper.toEntity(filmeAtualizacaoRequestDTO)).thenReturn(filmeParaSerAtualizado);
+        when(filmeService.atualizarFilme(id, filmeParaSerAtualizado)).thenReturn(filmeAtualizado);
+        when(filmeMapper.toResponseDTO(filmeAtualizado)).thenReturn(filmeResponseDTOAtualizado);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.atualizarFilme(id, filmeAtualizacaoRequestDTO);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(id, response.getBody().id());
+        assertEquals("O Poderoso Chefão Parte II", response.getBody().titulo());
+        assertEquals(200, response.getBody().duracao());
+        assertEquals("Drama", response.getBody().genero());
+        assertEquals("Francis Ford Coppola", response.getBody().autor());
+        assertEquals(LocalDate.of(1974, 12, 20), response.getBody().dataLancamento());
+
+        verify(filmeMapper, times(1)).toEntity(filmeAtualizacaoRequestDTO);
+        verify(filmeService, times(1)).atualizarFilme(id, filmeParaSerAtualizado);
+        verify(filmeMapper, times(1)).toResponseDTO(filmeAtualizado);
+    }
+
+    @Test
+    @DisplayName("Deve retornar filme atualizado no corpo da resposta")
+    void deveRetornarFilmeAtualizadoNoCorpo() {
+        // Arrange
+        Long id = 1L;
+        FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO = new FilmeAtualizacaoRequestDTO(
+                "Título Atualizado",
+                150,
+                "Comédia",
+                "Novo Autor",
+                LocalDate.of(2024, 1, 1)
+        );
+
+        Filme filmeParaSerAtualizado = new Filme();
+        Filme filmeAtualizado = new Filme();
+        filmeAtualizado.setId(id);
+
+        FilmeResponseDTO filmeResponseDTO = new FilmeResponseDTO(
+                id,
+                "Título Atualizado",
+                150,
+                "Comédia",
+                "Novo Autor",
+                LocalDate.of(2024, 1, 1)
+        );
+
+        when(filmeMapper.toEntity(any(FilmeAtualizacaoRequestDTO.class))).thenReturn(filmeParaSerAtualizado);
+        when(filmeService.atualizarFilme(anyLong(), any(Filme.class))).thenReturn(filmeAtualizado);
+        when(filmeMapper.toResponseDTO(any(Filme.class))).thenReturn(filmeResponseDTO);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.atualizarFilme(id, filmeAtualizacaoRequestDTO);
+
+        // Assert
+        assertNotNull(response.getBody());
+        assertEquals(filmeResponseDTO, response.getBody());
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException ao tentar atualizar filme que não existe")
+    void deveLancarExcecaoAoAtualizarFilmeInexistente() {
+        // Arrange
+        Long id = 999L;
+        FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO = new FilmeAtualizacaoRequestDTO(
+                "Filme Inexistente",
+                120,
+                "Ação",
+                "Diretor Desconhecido",
+                LocalDate.of(2023, 1, 1)
+        );
+
+        Filme filme = new Filme();
+        when(filmeMapper.toEntity(any(FilmeAtualizacaoRequestDTO.class))).thenReturn(filme);
+        when(filmeService.atualizarFilme(id, filme))
+                .thenThrow(new FilmeInexistenteException("Filme não encontrado no sistema"));
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> catalogoController.atualizarFilme(id, filmeAtualizacaoRequestDTO)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeMapper, times(1)).toEntity(filmeAtualizacaoRequestDTO);
+        verify(filmeService, times(1)).atualizarFilme(id, filme);
+        verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
+    }
 }
-
-
