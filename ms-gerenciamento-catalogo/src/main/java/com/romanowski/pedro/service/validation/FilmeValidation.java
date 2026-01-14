@@ -44,5 +44,11 @@ public class FilmeValidation {
         }
     }
 
+    public void validarBuscaPorFilmePeloTitulo(String titulo){
+        if (filmeRepository.findByTitulo(titulo).isEmpty()){
+            throw new FilmeInexistenteException(mensagemFilmeInexistente);
+        }
+    }
+
 
 }

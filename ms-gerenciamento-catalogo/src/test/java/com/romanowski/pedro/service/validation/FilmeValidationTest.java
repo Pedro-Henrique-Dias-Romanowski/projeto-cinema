@@ -352,6 +352,65 @@ class FilmeValidationTest {
         verify(filmeRepository, times(1)).findById(id);
         verifyNoMoreInteractions(filmeRepository);
     }
+
+    // Testes para validarBuscaPorFilmePeloTitulo
+    @Test
+    @DisplayName("Deve validar busca por título com sucesso quando o filme existe")
+    void deveValidarBuscaPorTituloComSucessoQuandoFilmeExiste() {
+        // Arrange
+        String titulo = "O Poderoso Chefão";
+        when(filmeRepository.findByTitulo(titulo)).thenReturn(Optional.of(filme));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> filmeValidation.validarBuscaPorFilmePeloTitulo(titulo));
+        verify(filmeRepository, times(1)).findByTitulo(titulo);
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não existe por título")
+    void deveLancarExcecaoQuandoFilmeNaoExistePorTitulo() {
+        // Arrange
+        String titulo = "Filme Inexistente";
+        when(filmeRepository.findByTitulo(titulo)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeValidation.validarBuscaPorFilmePeloTitulo(titulo)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeRepository, times(1)).findByTitulo(titulo);
+    }
+
+
+
+    @Test
+    @DisplayName("Deve lançar exceção quando buscar por título que retorna Optional vazio")
+    void deveLancarExcecaoQuandoBuscarPorTituloOptionalVazio() {
+        // Arrange
+        String titulo = "Título Não Existente";
+        when(filmeRepository.findByTitulo(titulo)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class,
+            () -> filmeValidation.validarBuscaPorFilmePeloTitulo(titulo));
+        verify(filmeRepository, times(1)).findByTitulo(titulo);
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção para título vazio que não existe no banco")
+    void deveLancarExcecaoParaTituloVazio() {
+        // Arrange
+        String titulo = "";
+        when(filmeRepository.findByTitulo(titulo)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class,
+            () -> filmeValidation.validarBuscaPorFilmePeloTitulo(titulo));
+        verify(filmeRepository, times(1)).findByTitulo(titulo);
+    }
 }
 
 

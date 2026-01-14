@@ -386,6 +386,67 @@ class CatalogoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve buscar filme por título com sucesso e retornar status 200 OK")
+    void deveBuscarFilmePorTituloComSucesso() {
+        // Arrange
+        String titulo = "O Poderoso Chefão";
+        when(filmeService.buscarFilmePorTitulo(titulo)).thenReturn(Optional.of(filmeSalvo));
+        when(filmeMapper.toResponseDTO(filmeSalvo)).thenReturn(filmeResponseDTO);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.buscarFilmePorTitulo(titulo);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1L, response.getBody().id());
+        assertEquals("O Poderoso Chefão", response.getBody().titulo());
+        assertEquals(175, response.getBody().duracao());
+        assertEquals("Drama", response.getBody().genero());
+        assertEquals("Francis Ford Coppola", response.getBody().autor());
+
+        verify(filmeService, times(1)).buscarFilmePorTitulo(titulo);
+        verify(filmeMapper, times(1)).toResponseDTO(filmeSalvo);
+    }
+
+
+    @Test
+    @DisplayName("Deve processar Optional vazio corretamente ao buscar por título")
+    void deveProcessarOptionalVazioCorretamenteAoBuscarPorTitulo() {
+        // Arrange
+        String titulo = "Filme Inexistente";
+        when(filmeService.buscarFilmePorTitulo(titulo)).thenReturn(Optional.empty());
+        when(filmeMapper.toResponseDTO(null)).thenReturn(null);
+
+        // Act
+        ResponseEntity<FilmeResponseDTO> response = catalogoController.buscarFilmePorTitulo(titulo);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não é encontrado por título")
+    void deveLancarExcecaoQuandoFilmeNaoExistePorTitulo() {
+        // Arrange
+        String titulo = "Filme que não existe";
+        when(filmeService.buscarFilmePorTitulo(titulo)).thenThrow(new FilmeInexistenteException("Filme não encontrado no sistema"));
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> catalogoController.buscarFilmePorTitulo(titulo)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeService, times(1)).buscarFilmePorTitulo(titulo);
+        verify(filmeMapper, never()).toResponseDTO(any(Filme.class));
+    }
+
+    @Test
     @DisplayName("Deve deletar filme com sucesso e retornar status 204 NO_CONTENT")
     void deveDeletarFilmeComSucesso() {
         // Arrange

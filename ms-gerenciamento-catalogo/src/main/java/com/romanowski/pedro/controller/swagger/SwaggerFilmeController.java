@@ -20,6 +20,9 @@ public interface SwaggerFilmeController {
     @GetMapping("/filmes/{id}")
     ResponseEntity<FilmeResponseDTO> buscarFilmePorId(@PathVariable Long id);
 
+    @GetMapping("/filmes/titulo")
+    ResponseEntity<FilmeResponseDTO> buscarFilmePorTitulo(@RequestHeader String titulo);
+
     @PatchMapping("/filmes/{id}")
     ResponseEntity<FilmeResponseDTO> atualizarFilme(@PathVariable Long id, @RequestBody FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO);
 

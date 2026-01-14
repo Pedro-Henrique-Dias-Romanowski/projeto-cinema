@@ -35,6 +35,11 @@ public class FilmeService {
         return filmeRepository.findById(id);
     }
 
+    public Optional<Filme> buscarFilmePorTitulo(String titulo){
+        filmeValidation.validarBuscaPorFilmePeloTitulo(titulo);
+        return filmeRepository.findByTitulo(titulo);
+    }
+
     public Filme atualizarFilme(Long id, Filme filme){
         filmeValidation.validarBuscaPorFilme(id);
         Filme filmeExistente = filmeRepository.findById(id).get();

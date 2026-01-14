@@ -367,6 +367,63 @@ class FilmeServiceTest {
 
 
     @Test
+    @DisplayName("Deve buscar filme por título com sucesso quando o filme existe")
+    void deveBuscarFilmePorTituloComSucesso() {
+        // Arrange
+        String titulo = "O Poderoso Chefão";
+        doNothing().when(filmeValidation).validarBuscaPorFilmePeloTitulo(titulo);
+        when(filmeRepository.findByTitulo(titulo)).thenReturn(Optional.of(filmeSalvo));
+
+        // Act
+        Optional<Filme> resultado = filmeService.buscarFilmePorTitulo(titulo);
+
+        // Assert
+        assertTrue(resultado.isPresent());
+        assertEquals(1L, resultado.get().getId());
+        assertEquals("O Poderoso Chefão", resultado.get().getTitulo());
+        assertEquals(175, resultado.get().getDuracao());
+        assertEquals("Drama", resultado.get().getGenero());
+        assertEquals("Francis Ford Coppola", resultado.get().getAutor());
+        assertEquals(LocalDate.of(1972, 3, 24), resultado.get().getDataLancamento());
+
+        verify(filmeValidation, times(1)).validarBuscaPorFilmePeloTitulo(titulo);
+        verify(filmeRepository, times(1)).findByTitulo(titulo);
+    }
+
+    @Test
+    @DisplayName("Deve lançar FilmeInexistenteException quando filme não existe por título")
+    void deveLancarExcecaoQuandoFilmeNaoExistePorTitulo() {
+        // Arrange
+        String titulo = "Filme Inexistente";
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilmePeloTitulo(titulo);
+
+        // Act & Assert
+        FilmeInexistenteException exception = assertThrows(
+                FilmeInexistenteException.class,
+                () -> filmeService.buscarFilmePorTitulo(titulo)
+        );
+
+        assertEquals("Filme não encontrado no sistema", exception.getMessage());
+        verify(filmeValidation, times(1)).validarBuscaPorFilmePeloTitulo(titulo);
+        verify(filmeRepository, never()).findByTitulo(any(String.class));
+    }
+
+    @Test
+    @DisplayName("Não deve buscar no repositório quando a validação falha ao buscar por título")
+    void naoDeveBuscarNoRepositorioQuandoValidacaoFalhaPorTitulo() {
+        // Arrange
+        String titulo = "Filme Qualquer";
+        doThrow(new FilmeInexistenteException("Filme não encontrado no sistema"))
+                .when(filmeValidation).validarBuscaPorFilmePeloTitulo(titulo);
+
+        // Act & Assert
+        assertThrows(FilmeInexistenteException.class, () -> filmeService.buscarFilmePorTitulo(titulo));
+        verify(filmeRepository, never()).findByTitulo(any(String.class));
+    }
+
+
+    @Test
     @DisplayName("Deve deletar filme com sucesso quando o filme existe")
     void deveDeletarFilmeComSucesso() {
         // Arrange

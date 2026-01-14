@@ -48,6 +48,12 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
+    public ResponseEntity<FilmeResponseDTO> buscarFilmePorTitulo(String titulo) {
+        Optional<Filme> filme = filmeService.buscarFilmePorTitulo(titulo);
+        return ResponseEntity.status(HttpStatus.OK).body(filmeMapper.toResponseDTO(filme.orElse(null)));
+    }
+
+    @Override
     public ResponseEntity<FilmeResponseDTO> atualizarFilme(Long id, FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO) {
         Filme filmeParaSerAtualizado = filmeMapper.toEntity(filmeAtualizacaoRequestDTO);
         Filme filmeAtualizado = filmeService.atualizarFilme(id, filmeParaSerAtualizado);
