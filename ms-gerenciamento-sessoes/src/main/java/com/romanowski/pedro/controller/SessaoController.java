@@ -54,8 +54,8 @@ public class SessaoController implements SwaggerSessaoController {
     }
 
     @Override
-    public ResponseEntity<Void> cancelarReservaSessao(Long id) {
-        sessaoService.cancelarReservaSessao(id);
+    public ResponseEntity<Void> cancelarReservaSessao(Long idSessao, Long idCliente) {
+        sessaoService.cancelarReservaSessao(idSessao, idCliente);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 }

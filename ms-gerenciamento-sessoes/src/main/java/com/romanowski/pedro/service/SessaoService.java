@@ -25,7 +25,7 @@ public class SessaoService {
         return Optional.empty();
     }
 
-    public void cancelarReservaSessao(Long id){
+    public void cancelarReservaSessao(Long idSessao, Long idCliente){
 
     }
 }
