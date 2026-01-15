@@ -28,9 +28,9 @@ public class SessaoController implements SwaggerSessaoController {
 
 
     @Override
-    public ResponseEntity<SessaoResponseDTO> fazerReservaSessao(SessaoRequestDTO sessaoRequestDTO) {
+    public ResponseEntity<SessaoResponseDTO> cadastrarSessao(SessaoRequestDTO sessaoRequestDTO) {
         Sessao sessao = sessaoMapper.toEntity(sessaoRequestDTO);
-        Sessao sessaoSalva = sessaoService.fazerReservaSessao(sessao);
+        Sessao sessaoSalva = sessaoService.cadastrarSessao(sessao);
         return ResponseEntity.status(HttpStatus.OK).body(sessaoMapper.toResponseDTO(sessaoSalva));
     }
 
@@ -54,8 +54,8 @@ public class SessaoController implements SwaggerSessaoController {
     }
 
     @Override
-    public ResponseEntity<Void> cancelarReservaSessao(Long idSessao, Long idCliente) {
-        sessaoService.cancelarReservaSessao(idSessao, idCliente);
+    public ResponseEntity<Void> cancelarSessao(Long idSessao) {
+        sessaoService.cancelarSessao(idSessao);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 }

@@ -10,8 +10,9 @@ import java.util.List;
 
 public interface SwaggerSessaoController {
 
+
     @PostMapping("/sessoes")
-    ResponseEntity<SessaoResponseDTO> fazerReservaSessao(@Valid @RequestBody SessaoRequestDTO sessaoRequestDTO);
+    ResponseEntity<SessaoResponseDTO> cadastrarSessao(@Valid @RequestBody SessaoRequestDTO sessaoRequestDTO);
 
     @PostMapping("/sessoes/confirmar/{id}")
     ResponseEntity<SessaoResponseDTO> confirmarReservaSessao(@PathVariable Long id);
@@ -22,6 +23,6 @@ public interface SwaggerSessaoController {
     @GetMapping("/sessoes/{id}")
     ResponseEntity<SessaoResponseDTO> procurarSessaoPorId(Long id);
 
-    @DeleteMapping("sessoes/{idCliente}/{idSessao}")
-    ResponseEntity<Void> cancelarReservaSessao(@PathVariable Long idSessao, @PathVariable Long idCliente);
+    @DeleteMapping("sessoes/{idSessao}")
+    ResponseEntity<Void> cancelarSessao(@PathVariable Long idSessao);
 }
