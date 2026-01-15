@@ -1,0 +1,1 @@
+ALTER TABLE SESSOES add COLUMN sala int(3) NOT NULL AFTER id_filme;
