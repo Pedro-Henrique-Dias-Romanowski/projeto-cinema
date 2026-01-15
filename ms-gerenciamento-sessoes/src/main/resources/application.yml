@@ -1,5 +1,9 @@
 server:
-  port: 8083
+  port: 8081
+
+URL_CATALOGO_SERVICE: http://localhost:8082
+URL_CLIENTE_SERVICE: http://localhost:8080
+
 spring:
   application:
     name:
