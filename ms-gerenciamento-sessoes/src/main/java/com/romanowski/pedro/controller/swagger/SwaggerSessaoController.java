@@ -21,7 +21,7 @@ public interface SwaggerSessaoController {
     ResponseEntity<List<SessaoResponseDTO>> listarSessoes();
 
     @GetMapping("/sessoes/{id}")
-    ResponseEntity<SessaoResponseDTO> procurarSessaoPorId(Long id);
+    ResponseEntity<SessaoResponseDTO> procurarSessaoPorId(@PathVariable Long id);
 
     @DeleteMapping("sessoes/{idSessao}")
     ResponseEntity<Void> cancelarSessao(@PathVariable Long idSessao);

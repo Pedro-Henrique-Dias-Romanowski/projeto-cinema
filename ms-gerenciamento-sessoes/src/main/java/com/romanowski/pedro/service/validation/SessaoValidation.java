@@ -3,10 +3,7 @@ package com.romanowski.pedro.service.validation;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.dto.response.FilmeResponseDTO;
 import com.romanowski.pedro.entity.Sessao;
-import com.romanowski.pedro.exceptions.ClienteNaoEncontradoException;
-import com.romanowski.pedro.exceptions.DataSessaoInvalidaException;
-import com.romanowski.pedro.exceptions.FilmeNaoEncontradoException;
-import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
+import com.romanowski.pedro.exceptions.*;
 import com.romanowski.pedro.repository.SessaoRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,6 +25,12 @@ public class SessaoValidation {
 
     @Value("${mensagem.sessao.data.invalida}")
     private String mensagemDataInvalida;
+
+    @Value("${mensagem.sessoes.lista.vazia}")
+    private String mensagemListaSessoesVazia;
+
+    @Value("${mensagem.sessao.existente}")
+    private String mensagemSessaoExistente;
 
     private final SessaoRepository sessaoRepository;
 
@@ -53,9 +56,22 @@ public class SessaoValidation {
         }
     }
 
+    public void validarExistenciaSessaoMesmoHorarioESala(Sessao sessao){
+        boolean existeSessao = sessaoRepository.existsBySalaAndDataHoraSessao(sessao.getSala(), sessao.getDataHoraSessao());
+        if (existeSessao){
+            throw new SessaoExistenteException(mensagemSessaoExistente);
+        }
+    }
+
     public void validarSessao(Long idSessao){
         if (!sessaoRepository.existsById(idSessao)){
             throw new SessaoNaoEcontradaException(mensagemSessaoNaoEncontrada);
+        }
+    }
+
+    public void validarBuscaSessoes(){
+        if (sessaoRepository.findAll().isEmpty()){
+            throw new ListaSessoesVaziaException(mensagemListaSessoesVazia);
         }
     }
 }

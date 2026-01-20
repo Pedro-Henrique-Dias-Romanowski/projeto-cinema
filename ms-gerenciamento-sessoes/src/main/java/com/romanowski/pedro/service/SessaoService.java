@@ -5,14 +5,12 @@ import com.romanowski.pedro.dto.response.FilmeResponseDTO;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
 import com.romanowski.pedro.feign.CatalogoFeignClient;
-import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.validation.SessaoValidation;
-import jakarta.persistence.Transient;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,20 +34,17 @@ public class SessaoService {
     @Transactional
     public Sessao cadastrarSessao(Sessao sessao){
         try {
-            logger.info("Definindo título no ThreadLocal: {}", sessao.getTituloFilme());
-            // Define o título no ThreadLocal para ser capturado pelo interceptor
             FeignInterceptor.setTitulo(sessao.getTituloFilme());
 
-            logger.info("Chamando Feign Client para obter filme...");
             Optional<FilmeResponseDTO> filme = catalogoFeignClient.obterFilmePorTitulo();
             sessaoValidation.validarFilme(filme);
             sessaoValidation.validarDataHoraSessao(sessao.getDataHoraSessao());
+            sessaoValidation.validarExistenciaSessaoMesmoHorarioESala(sessao);
             sessao.setReservas(List.of());
             sessao.setIdFilme(filme.get().idFilme());
+            sessao.setAtiva(true);
             return sessaoRepository.save(sessao);
         } finally {
-            logger.info("Limpando ThreadLocal...");
-            // Limpa o ThreadLocal para evitar memory leaks
             FeignInterceptor.clearTitulo();
         }
     }
@@ -58,17 +53,27 @@ public class SessaoService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     public List<Sessao> listarSessoes(){
-        return List.of();
+        sessaoValidation.validarBuscaSessoes();
+        return sessaoRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Optional<Sessao> procurarSessaoPorId(Long id){
-        return Optional.empty();
+        sessaoValidation.validarSessao(id);
+        return sessaoRepository.findById(id);
     }
 
+    @Transactional
     public void cancelarSessao(Long idSessao){
+        sessaoValidation.validarSessao(idSessao);
+        Sessao sessao = sessaoRepository.findById(idSessao).get();
+        sessao.setAtiva(false);
+        sessaoRepository.save(sessao);
     }
 
+    @Transactional
     public void atualizarReservasSessao(Reserva reserva){
         Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
         sessao.getReservas().add(reserva);

@@ -10,7 +10,6 @@ import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -24,25 +23,27 @@ public class ReservaService {
     private final SessaoValidation sessaoValidation;
     private final ClienteFeignClient clienteFeignClient;
     private final SessaoService sessaoService;
+    private final ReservaValidation reservaValidation;
 
     @Value("${mensagem.reserva.feita}")
     private String mensagemReservaFeita;
 
-    public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService) {
+    public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation) {
         this.reservaRepository = reservaRepository;
         this.sessaoRepository = sessaoRepository;
         this.sessaoValidation = sessaoValidation;
         this.clienteFeignClient = clienteFeignClient;
         this.sessaoService = sessaoService;
+        this.reservaValidation = reservaValidation;
     }
 
 
     @Transactional
     public Reserva adicionarReserva(Long idCliente, Long idSessao){
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
-        sessaoValidation.validarSessao(idSessao);
-        sessaoValidation.validarCliente(cliente);
         Sessao sessao = sessaoRepository.findById(idSessao).get();
+        reservaValidation.validarSessao(sessao);
+        sessaoValidation.validarCliente(cliente);
         Reserva reserva = Reserva.builder()
                 .idCliente(idCliente)
                 .sessao(sessao)

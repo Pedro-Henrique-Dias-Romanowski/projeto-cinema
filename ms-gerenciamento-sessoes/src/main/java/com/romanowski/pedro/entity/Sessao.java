@@ -24,7 +24,7 @@ public class Sessao {
     @Column(name = "id_filme", nullable = false)
     private Long idFilme;
 
-    @Transient
+    @Column(name = "titulo_filme", nullable = false)
     private String tituloFilme;
 
     @OneToMany(mappedBy = "sessao", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -36,4 +36,6 @@ public class Sessao {
 
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHoraSessao;
+
+    private Boolean ativa;
 }

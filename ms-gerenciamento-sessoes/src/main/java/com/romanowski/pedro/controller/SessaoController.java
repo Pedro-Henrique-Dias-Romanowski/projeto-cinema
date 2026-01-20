@@ -56,6 +56,6 @@ public class SessaoController implements SwaggerSessaoController {
     @Override
     public ResponseEntity<Void> cancelarSessao(Long idSessao) {
         sessaoService.cancelarSessao(idSessao);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 }
