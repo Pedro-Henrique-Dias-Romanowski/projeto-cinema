@@ -1,0 +1,1 @@
+ALTER TABLE RESERVA add COLUMN mensagem varchar(255) NOT NULL AFTER pagamento_confirmado;
