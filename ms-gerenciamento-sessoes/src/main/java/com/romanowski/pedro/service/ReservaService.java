@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -54,5 +55,23 @@ public class ReservaService {
         Reserva reservaSalva = reservaRepository.save(reserva);
         sessaoService.atualizarReservasSessao(reservaSalva);
         return reservaRepository.save(reservaSalva);
+    }
+
+    public List<Reserva> listarReservas(Long idCliente){
+        // todo implementar listagem de reservas
+        Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
+        sessaoValidation.validarCliente(cliente);
+        List<Reserva> reservas = reservaRepository.findAllByIdCliente(idCliente);
+        reservaValidation.validarListagemReservas(reservas);
+        return reservas;
+    }
+
+    public Reserva buscarReservaPorId(Long idCliente, Long idReserva){
+        // todo implementar busca de reserva por id
+        return null;
+    }
+
+    public void cancelarReserva(Long id){
+        // todo implementar cancelamento de reserva
     }
 }

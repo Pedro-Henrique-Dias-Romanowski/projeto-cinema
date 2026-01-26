@@ -18,6 +18,7 @@ public class Reserva {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "id_cliente", nullable = false)
     private Long idCliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,8 +27,10 @@ public class Reserva {
 
     @Column(name = "pagamento_confirmado")
     private Boolean pagamentoConfirmado;
+
+    @Column
     private Boolean ativa;
 
-    @Transient
+    @Column
     private String mensagem;
 }

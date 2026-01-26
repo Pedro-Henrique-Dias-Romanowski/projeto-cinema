@@ -5,6 +5,7 @@ import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
 import com.romanowski.pedro.exceptions.ClienteNaoEncontradoException;
+import com.romanowski.pedro.exceptions.ListaReservasVaziaException;
 import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
@@ -23,6 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -326,5 +328,179 @@ class ReservaServiceTest {
 
         // Then
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
+    }
+    
+    @Test
+    @DisplayName("Deve listar todas as reservas de um cliente com sucesso")
+    void deveListarTodasReservasDeUmClienteComSucesso() {
+        // Given
+        Long idCliente = 1L;
+
+        Sessao sessao2 = Sessao.builder()
+                .id(2L)
+                .idFilme(2L)
+                .tituloFilme("Filme Teste 2")
+                .sala(2)
+                .preco(45.0)
+                .dataHoraSessao(LocalDateTime.of(2026, 2, 21, 18, 0))
+                .ativa(true)
+                .build();
+
+        Reserva reserva2 = Reserva.builder()
+                .id(2L)
+                .idCliente(idCliente)
+                .sessao(sessao2)
+                .pagamentoConfirmado(true)
+                .ativa(true)
+                .mensagem("Pagamento confirmado.")
+                .build();
+
+        List<Reserva> reservas = List.of(reserva, reserva2);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        doNothing().when(reservaValidation).validarListagemReservas(any());
+
+        // When
+        List<Reserva> resultado = reservaService.listarReservas(idCliente);
+
+        // Then
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        assertEquals(1L, resultado.get(0).getId());
+        assertEquals(2L, resultado.get(1).getId());
+        assertEquals(idCliente, resultado.get(0).getIdCliente());
+        assertEquals(idCliente, resultado.get(1).getIdCliente());
+
+        verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
+        verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
+        verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
+        verify(reservaValidation, times(1)).validarListagemReservas(reservas);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando cliente não for encontrado ao listar reservas")
+    void deveLancarExcecaoQuandoClienteNaoForEncontradoAoListarReservas() {
+        // Given
+        Long idCliente = 999L;
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
+        doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
+                .when(sessaoValidation).validarCliente(Optional.empty());
+
+        // When & Then
+        assertThrows(ClienteNaoEncontradoException.class, () -> {
+            reservaService.listarReservas(idCliente);
+        });
+
+        verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
+        verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
+        verify(reservaRepository, never()).findAllByIdCliente(anyLong());
+        verify(reservaValidation, never()).validarListagemReservas(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando lista de reservas estiver vazia")
+    void deveLancarExcecaoQuandoListaDeReservasEstiverVazia() {
+        // Given
+        Long idCliente = 1L;
+        List<Reserva> reservasVazia = new ArrayList<>();
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservasVazia);
+        doThrow(new ListaReservasVaziaException("Lista de reservas vazia"))
+                .when(reservaValidation).validarListagemReservas(reservasVazia);
+
+        // When & Then
+        assertThrows(ListaReservasVaziaException.class, () -> {
+            reservaService.listarReservas(idCliente);
+        });
+
+        verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
+        verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
+        verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
+        verify(reservaValidation, times(1)).validarListagemReservas(reservasVazia);
+    }
+
+    @Test
+    @DisplayName("Deve listar apenas uma reserva quando cliente possui apenas uma")
+    void deveListarApenasUmaReservaQuandoClientePossuiApenaUma() {
+        // Given
+        Long idCliente = 1L;
+        List<Reserva> reservas = List.of(reserva);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        doNothing().when(reservaValidation).validarListagemReservas(any());
+
+        // When
+        List<Reserva> resultado = reservaService.listarReservas(idCliente);
+
+        // Then
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(1L, resultado.get(0).getId());
+        assertEquals(idCliente, resultado.get(0).getIdCliente());
+        assertFalse(resultado.get(0).getPagamentoConfirmado());
+
+        verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
+    }
+
+
+    @Test
+    @DisplayName("Deve validar cliente antes de listar reservas")
+    void deveValidarClienteAntesDeListarReservas() {
+        // Given
+        Long idCliente = 1L;
+        List<Reserva> reservas = List.of(reserva);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        doNothing().when(reservaValidation).validarListagemReservas(any());
+
+        // When
+        reservaService.listarReservas(idCliente);
+
+        // Then
+        verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
+        verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista com todas as reservas ativas e inativas")
+    void deveRetornarListaComTodasReservasAtivasEInativas() {
+        // Given
+        Long idCliente = 1L;
+
+        Reserva reservaInativa = Reserva.builder()
+                .id(2L)
+                .idCliente(idCliente)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(false)
+                .mensagem("Reserva cancelada.")
+                .build();
+
+        List<Reserva> reservas = List.of(reserva, reservaInativa);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        doNothing().when(reservaValidation).validarListagemReservas(any());
+
+        // When
+        List<Reserva> resultado = reservaService.listarReservas(idCliente);
+
+        // Then
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        assertTrue(resultado.get(0).getAtiva());
+        assertFalse(resultado.get(1).getAtiva());
+
+        verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
     }
 }

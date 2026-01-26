@@ -1,6 +1,8 @@
 package com.romanowski.pedro.service.validation;
 
+import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
+import com.romanowski.pedro.exceptions.ListaReservasVaziaException;
 import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
 import com.romanowski.pedro.repository.SessaoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -29,11 +33,13 @@ class ReservaValidationTest {
     private ReservaValidation reservaValidation;
 
     private Sessao sessao;
+    private Reserva reserva;
 
     @BeforeEach
     void setUp() {
-        // Inicializar mensagem usando ReflectionTestUtils
+        // Inicializar mensagens usando ReflectionTestUtils
         ReflectionTestUtils.setField(reservaValidation, "mensagemSessaoNaoEncontrada", "Sessao não encontrada");
+        ReflectionTestUtils.setField(reservaValidation, "mensagemListaReservasVazia", "Lista de reservas vazia");
 
         // Dados de teste
         sessao = Sessao.builder()
@@ -44,6 +50,15 @@ class ReservaValidationTest {
                 .preco(50.0)
                 .dataHoraSessao(LocalDateTime.of(2026, 2, 20, 20, 0))
                 .ativa(true)
+                .build();
+
+        reserva = Reserva.builder()
+                .id(1L)
+                .idCliente(1L)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva realizada com sucesso.")
                 .build();
     }
 
@@ -164,5 +179,115 @@ class ReservaValidationTest {
         // When & Then - ativa null resultará em NullPointerException ou será tratado como false
         assertThrows(Exception.class,
                 () -> reservaValidation.validarSessao(sessaoComAtivaNulo));
+    }
+
+    // ================= TESTES PARA VALIDAR LISTAGEM DE RESERVAS =================
+
+    @Test
+    @DisplayName("Deve validar lista de reservas com sucesso quando lista contém elementos")
+    void deveValidarListaDeReservasComSucessoQuandoListaContemElementos() {
+        // Given
+        List<Reserva> reservas = List.of(reserva);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarListagemReservas(reservas));
+    }
+
+    @Test
+    @DisplayName("Deve lançar ListaReservasVaziaException quando lista está vazia")
+    void deveLancarExcecaoQuandoListaEstaVazia() {
+        // Given
+        List<Reserva> reservasVazia = new ArrayList<>();
+
+        // When & Then
+        ListaReservasVaziaException exception = assertThrows(
+                ListaReservasVaziaException.class,
+                () -> reservaValidation.validarListagemReservas(reservasVazia)
+        );
+
+        assertEquals("Lista de reservas vazia", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve validar lista com múltiplas reservas")
+    void deveValidarListaComMultiplasReservas() {
+        // Given
+        Reserva reserva2 = Reserva.builder()
+                .id(2L)
+                .idCliente(1L)
+                .sessao(sessao)
+                .pagamentoConfirmado(true)
+                .ativa(true)
+                .mensagem("Pagamento confirmado.")
+                .build();
+
+        Reserva reserva3 = Reserva.builder()
+                .id(3L)
+                .idCliente(1L)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Aguardando pagamento.")
+                .build();
+
+        List<Reserva> reservas = List.of(reserva, reserva2, reserva3);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarListagemReservas(reservas));
+    }
+
+
+    @Test
+    @DisplayName("Deve validar lista com reservas ativas e inativas")
+    void deveValidarListaComReservasAtivasEInativas() {
+        // Given
+        Reserva reservaInativa = Reserva.builder()
+                .id(2L)
+                .idCliente(1L)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(false)
+                .mensagem("Reserva cancelada.")
+                .build();
+
+        List<Reserva> reservas = List.of(reserva, reservaInativa);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarListagemReservas(reservas));
+    }
+
+    @Test
+    @DisplayName("Deve validar lista com reservas de diferentes clientes")
+    void deveValidarListaComReservasDeDiferentesClientes() {
+        // Given
+        Reserva reservaCliente2 = Reserva.builder()
+                .id(2L)
+                .idCliente(2L)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva cliente 2.")
+                .build();
+
+        List<Reserva> reservas = List.of(reserva, reservaCliente2);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarListagemReservas(reservas));
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar exceção para lista criada como vazia")
+    void deveLancarExcecaoParaListaCriadaComoVazia() {
+        // Given
+        List<Reserva> reservasVazia = List.of();
+
+        // When & Then
+        ListaReservasVaziaException exception = assertThrows(
+                ListaReservasVaziaException.class,
+                () -> reservaValidation.validarListagemReservas(reservasVazia)
+        );
+
+        assertEquals("Lista de reservas vazia", exception.getMessage());
     }
 }

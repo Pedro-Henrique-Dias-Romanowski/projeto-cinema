@@ -49,9 +49,6 @@ public class SessaoService {
         }
     }
 
-    public Sessao confirmarReservaSessao(Long id){
-        return null;
-    }
 
     @Transactional(readOnly = true)
     public List<Sessao> listarSessoes(){

@@ -35,12 +35,6 @@ public class SessaoController implements SwaggerSessaoController {
     }
 
     @Override
-    public ResponseEntity<SessaoResponseDTO> confirmarReservaSessao(Long id) {
-        Sessao sessaoConfirmada = sessaoService.confirmarReservaSessao(id);
-        return ResponseEntity.status(HttpStatus.OK).body(sessaoMapper.toResponseDTO(sessaoConfirmada));
-    }
-
-    @Override
     public ResponseEntity<List<SessaoResponseDTO>> listarSessoes() {
         List<Sessao> sessoes = sessaoService.listarSessoes();
         List<SessaoResponseDTO> sessoesResponseDTO = sessoes.stream().map(sessaoMapper::toResponseDTO).toList();

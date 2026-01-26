@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/v1")
 public class ReservaController implements SwaggerReservaController {
@@ -27,5 +29,25 @@ public class ReservaController implements SwaggerReservaController {
     public ResponseEntity<ReservaResponseDTO> criarReserva(Long idCliente, Long idSessao) {
         Reserva reserva = reservaService.adicionarReserva(idCliente, idSessao);
         return ResponseEntity.status(HttpStatus.OK).body(reservaMapper.toResponseDTO(reserva));
+    }
+
+    @Override
+    public ResponseEntity<List<ReservaResponseDTO>> listarReservas(Long idCliente) {
+        List<Reserva> reservas = reservaService.listarReservas(idCliente);
+        List<ReservaResponseDTO> reservaResponseDTOs = reservas.stream().map(reservaMapper::toResponseDTO).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(reservaResponseDTOs);
+    }
+
+    @Override
+    public ResponseEntity<ReservaResponseDTO> buscarReservaPorId(Long idCliente, Long idReserva) {
+        Reserva reserva = reservaService.buscarReservaPorId(idCliente, idReserva);
+        ReservaResponseDTO reservaResponseDTO = reservaMapper.toResponseDTO(reserva);
+        return ResponseEntity.status(HttpStatus.OK).body(reservaResponseDTO);
+    }
+
+    @Override
+    public ResponseEntity<Void> cancelarReserva(Long id) {
+        reservaService.cancelarReserva(id);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 }

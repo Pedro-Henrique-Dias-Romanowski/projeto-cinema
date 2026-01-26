@@ -14,9 +14,6 @@ public interface SwaggerSessaoController {
     @PostMapping("/sessoes")
     ResponseEntity<SessaoResponseDTO> cadastrarSessao(@Valid @RequestBody SessaoRequestDTO sessaoRequestDTO);
 
-    @PostMapping("/sessoes/confirmar/{id}")
-    ResponseEntity<SessaoResponseDTO> confirmarReservaSessao(@PathVariable Long id);
-
     @GetMapping("/sessoes")
     ResponseEntity<List<SessaoResponseDTO>> listarSessoes();
 
