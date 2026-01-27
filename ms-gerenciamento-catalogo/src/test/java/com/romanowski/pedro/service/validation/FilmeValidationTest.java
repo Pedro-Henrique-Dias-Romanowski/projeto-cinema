@@ -176,7 +176,7 @@ class FilmeValidationTest {
         when(filmeRepository.findAll()).thenReturn(listaFilmes);
 
         // Act & Assert
-        assertDoesNotThrow(() -> filmeValidation.validarListagemClientes());
+        assertDoesNotThrow(() -> filmeValidation.validarListagemFilmes());
         verify(filmeRepository, times(1)).findAll();
     }
 
@@ -189,7 +189,7 @@ class FilmeValidationTest {
         // Act & Assert
         ListaFilmesVaziaException exception = assertThrows(
                 ListaFilmesVaziaException.class,
-                () -> filmeValidation.validarListagemClientes()
+                () -> filmeValidation.validarListagemFilmes()
         );
 
         assertEquals("Nenhum filme encontrado no sistema", exception.getMessage());
@@ -206,7 +206,7 @@ class FilmeValidationTest {
         // Act & Assert
         ListaFilmesVaziaException exception = assertThrows(
                 ListaFilmesVaziaException.class,
-                () -> filmeValidation.validarListagemClientes()
+                () -> filmeValidation.validarListagemFilmes()
         );
 
         assertNotNull(exception.getMessage());
@@ -222,7 +222,7 @@ class FilmeValidationTest {
 
         // Act & Assert
         assertThrows(ListaFilmesVaziaException.class,
-            () -> filmeValidation.validarListagemClientes());
+            () -> filmeValidation.validarListagemFilmes());
         verify(filmeRepository, times(1)).findAll();
     }
 
@@ -233,9 +233,9 @@ class FilmeValidationTest {
         when(filmeRepository.findAll()).thenReturn(listaFilmes);
 
         // Act & Assert
-        assertDoesNotThrow(() -> filmeValidation.validarListagemClientes());
-        assertDoesNotThrow(() -> filmeValidation.validarListagemClientes());
-        assertDoesNotThrow(() -> filmeValidation.validarListagemClientes());
+        assertDoesNotThrow(() -> filmeValidation.validarListagemFilmes());
+        assertDoesNotThrow(() -> filmeValidation.validarListagemFilmes());
+        assertDoesNotThrow(() -> filmeValidation.validarListagemFilmes());
 
         verify(filmeRepository, times(3)).findAll();
     }
@@ -250,7 +250,7 @@ class FilmeValidationTest {
         when(filmeRepository.findAll()).thenReturn(listaOriginal);
 
         // Act
-        filmeValidation.validarListagemClientes();
+        filmeValidation.validarListagemFilmes();
 
         // Assert
         assertEquals(tamanhoOriginal, listaOriginal.size());

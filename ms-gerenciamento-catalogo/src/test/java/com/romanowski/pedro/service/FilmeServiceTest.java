@@ -154,7 +154,7 @@ class FilmeServiceTest {
     @DisplayName("Deve retornar lista com todos os filmes cadastrados")
     void deveRetornarListaComTodosOsFilmes() {
         // Arrange
-        doNothing().when(filmeValidation).validarListagemClientes();
+        doNothing().when(filmeValidation).validarListagemFilmes();
         when(filmeRepository.findAll()).thenReturn(listaFilmes);
 
         // Act
@@ -173,7 +173,7 @@ class FilmeServiceTest {
     void deveLancarExcecaoQuandoNaoHaFilmes() {
         // Arrange
         doThrow(new ListaFilmesVaziaException("Nenhum filme encontrado no sistema"))
-                .when(filmeValidation).validarListagemClientes();
+                .when(filmeValidation).validarListagemFilmes();
 
         // Act & Assert
         ListaFilmesVaziaException exception = assertThrows(
@@ -182,7 +182,7 @@ class FilmeServiceTest {
         );
 
         assertEquals("Nenhum filme encontrado no sistema", exception.getMessage());
-        verify(filmeValidation, times(1)).validarListagemClientes();
+        verify(filmeValidation, times(1)).validarListagemFilmes();
         verify(filmeRepository, never()).findAll();
     }
 
@@ -191,7 +191,7 @@ class FilmeServiceTest {
     void naoDeveBuscarFilmesQuandoValidacaoFalha() {
         // Arrange
         doThrow(new ListaFilmesVaziaException("Nenhum filme encontrado no sistema"))
-                .when(filmeValidation).validarListagemClientes();
+                .when(filmeValidation).validarListagemFilmes();
 
         // Act & Assert
         assertThrows(ListaFilmesVaziaException.class, () -> filmeService.listarFilmes());
@@ -202,7 +202,7 @@ class FilmeServiceTest {
     @DisplayName("Deve retornar filmes com todos os dados corretos")
     void deveRetornarFilmesComTodosDadosCorretos() {
         // Arrange
-        doNothing().when(filmeValidation).validarListagemClientes();
+        doNothing().when(filmeValidation).validarListagemFilmes();
         when(filmeRepository.findAll()).thenReturn(listaFilmes);
 
         // Act
@@ -240,14 +240,14 @@ class FilmeServiceTest {
     @DisplayName("Deve chamar validação apenas uma vez por listagem")
     void deveChamarValidacaoApenasUmaVezParaListagem() {
         // Arrange
-        doNothing().when(filmeValidation).validarListagemClientes();
+        doNothing().when(filmeValidation).validarListagemFilmes();
         when(filmeRepository.findAll()).thenReturn(listaFilmes);
 
         // Act
         filmeService.listarFilmes();
 
         // Assert
-        verify(filmeValidation, times(1)).validarListagemClientes();
+        verify(filmeValidation, times(1)).validarListagemFilmes();
     }
 
 
