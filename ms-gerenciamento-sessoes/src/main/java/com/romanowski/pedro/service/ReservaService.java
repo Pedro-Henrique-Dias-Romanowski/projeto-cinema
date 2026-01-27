@@ -3,7 +3,6 @@ package com.romanowski.pedro.service;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
-import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -74,9 +72,13 @@ public class ReservaService {
         return reservas;
     }
 
-    public Reserva buscarReservaPorId(Long idCliente, Long idReserva){
-        // todo implementar busca de reserva por id
-        return null;
+    @Transactional(readOnly = true)
+    public Optional<Reserva> buscarReservaPorId(Long idCliente, Long idReserva){
+        Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
+        Reserva reserva = reservaRepository.getReferenceById(idReserva);
+        sessaoValidation.validarCliente(cliente);
+        reservaValidation.validarBuscaReserva(idCliente, reserva);
+        return reservaRepository.findByIdAndIdCliente(idReserva, idCliente);
     }
 
     @Transactional
@@ -84,10 +86,10 @@ public class ReservaService {
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Reserva reserva = reservaRepository.getReferenceById(idReserva);
         sessaoValidation.validarCliente(cliente);
-        reservaValidation.validarCancelamentoReserva(idCliente, reserva);
+        reservaValidation.validarBuscaReserva(idCliente, reserva);
         reserva.setAtiva(false);
         reserva.setMensagem(mensagemReservaCancelada);
         reservaRepository.save(reserva);
         sessaoService.removerReservasSessao(reserva);
-        }
+    }
 }

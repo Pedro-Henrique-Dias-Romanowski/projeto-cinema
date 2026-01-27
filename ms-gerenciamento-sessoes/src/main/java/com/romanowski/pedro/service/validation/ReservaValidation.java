@@ -51,7 +51,7 @@ public class ReservaValidation {
         }
     }
 
-    public void validarCancelamentoReserva(Long idCliente, Reserva reserva){
+    public void validarBuscaReserva(Long idCliente, Reserva reserva){
         if (!reservaRepository.existsById(reserva.getId()) || !reserva.getIdCliente().equals(idCliente)){
             throw new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada);
         }

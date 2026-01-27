@@ -308,7 +308,7 @@ class ReservaValidationTest {
         when(reservaRepository.existsById(reserva.getId())).thenReturn(true);
 
         // When & Then
-        assertDoesNotThrow(() -> reservaValidation.validarCancelamentoReserva(idCliente, reserva));
+        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(idCliente, reserva));
 
         verify(reservaRepository, times(1)).existsById(reserva.getId());
     }
@@ -324,7 +324,7 @@ class ReservaValidationTest {
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarCancelamentoReserva(idCliente, reserva)
+                () -> reservaValidation.validarBuscaReserva(idCliente, reserva)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -352,7 +352,7 @@ class ReservaValidationTest {
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarCancelamentoReserva(idCliente, reservaOutroCliente)
+                () -> reservaValidation.validarBuscaReserva(idCliente, reservaOutroCliente)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -380,7 +380,7 @@ class ReservaValidationTest {
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarCancelamentoReserva(idCliente, reservaInvalida)
+                () -> reservaValidation.validarBuscaReserva(idCliente, reservaInvalida)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -405,7 +405,7 @@ class ReservaValidationTest {
         when(reservaRepository.existsById(reservaCliente1.getId())).thenReturn(true);
 
         // When & Then
-        assertDoesNotThrow(() -> reservaValidation.validarCancelamentoReserva(idCliente, reservaCliente1));
+        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(idCliente, reservaCliente1));
 
         verify(reservaRepository, times(1)).existsById(reservaCliente1.getId());
     }

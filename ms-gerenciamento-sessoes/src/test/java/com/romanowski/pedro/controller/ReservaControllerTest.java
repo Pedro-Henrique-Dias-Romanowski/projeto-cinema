@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -360,6 +361,81 @@ class ReservaControllerTest {
     }
 
 
+    @Test
+    @DisplayName("Deve buscar uma reserva por ID com sucesso")
+    void deveBuscarReservaPorIdComSucesso() throws Exception {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        when(reservaService.buscarReservaPorId(idCliente, idReserva)).thenReturn(Optional.of(reserva));
+        when(reservaMapper.entityToResponseDTO(Optional.of(reserva))).thenReturn(reservaResponseDTO);
+
+        // When & Then
+        mockMvc.perform(get("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.idCliente").value(1L))
+                .andExpect(jsonPath("$.idSessao").value(1L))
+                .andExpect(jsonPath("$.pagamentoConfirmado").value(false))
+                .andExpect(jsonPath("$.ativa").value(true))
+                .andExpect(jsonPath("$.mensagem").value("Reserva realizada com sucesso. Para confirma-lá, conclua o pagamento."));
+
+        verify(reservaService, times(1)).buscarReservaPorId(idCliente, idReserva);
+        verify(reservaMapper, times(1)).entityToResponseDTO(Optional.of(reserva));
+    }
+
+    @Test
+    @DisplayName("Deve buscar reservas de diferentes clientes separadamente")
+    void deveBuscarReservasDeDiferentesClientesSeparadamente() throws Exception {
+        // Given
+        Long idCliente1 = 1L;
+        Long idCliente2 = 2L;
+        Long idReserva1 = 1L;
+        Long idReserva2 = 2L;
+
+        Reserva reservaCliente2 = Reserva.builder()
+                .id(2L)
+                .idCliente(2L)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva realizada com sucesso. Para confirma-lá, conclua o pagamento.")
+                .build();
+
+        ReservaResponseDTO reservaResponseDTOCliente2 = new ReservaResponseDTO(
+                2L,
+                2L,
+                1L,
+                false,
+                true,
+                "Reserva realizada com sucesso. Para confirma-lá, conclua o pagamento."
+        );
+
+        when(reservaService.buscarReservaPorId(idCliente1, idReserva1)).thenReturn(Optional.of(reserva));
+        when(reservaService.buscarReservaPorId(idCliente2, idReserva2)).thenReturn(Optional.of(reservaCliente2));
+        when(reservaMapper.entityToResponseDTO(Optional.of(reserva))).thenReturn(reservaResponseDTO);
+        when(reservaMapper.entityToResponseDTO(Optional.of(reservaCliente2))).thenReturn(reservaResponseDTOCliente2);
+
+        // When & Then - Cliente 1
+        mockMvc.perform(get("/v1/reservas/{idCliente}/{idReserva}", idCliente1, idReserva1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.idCliente").value(1L));
+
+        // When & Then - Cliente 2
+        mockMvc.perform(get("/v1/reservas/{idCliente}/{idReserva}", idCliente2, idReserva2)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2L))
+                .andExpect(jsonPath("$.idCliente").value(2L));
+
+        verify(reservaService, times(1)).buscarReservaPorId(idCliente1, idReserva1);
+        verify(reservaService, times(1)).buscarReservaPorId(idCliente2, idReserva2);
+    }
+    
     @Test
     @DisplayName("Deve cancelar uma reserva com sucesso")
     void deveCancelarReservaComSucesso() throws Exception {
