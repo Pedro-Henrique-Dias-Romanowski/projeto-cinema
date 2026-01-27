@@ -34,6 +34,7 @@ public class SessaoService {
     @Transactional
     public Sessao cadastrarSessao(Sessao sessao){
         try {
+            logger.info("Iniciando cadastro de sessão para o filme: {}", sessao.getTituloFilme());
             FeignInterceptor.setTitulo(sessao.getTituloFilme());
 
             Optional<FilmeResponseDTO> filme = catalogoFeignClient.obterFilmePorTitulo();
@@ -52,18 +53,21 @@ public class SessaoService {
 
     @Transactional(readOnly = true)
     public List<Sessao> listarSessoes(){
+        logger.info("Iniciando listagem de sessões");
         sessaoValidation.validarBuscaSessoes();
         return sessaoRepository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Optional<Sessao> procurarSessaoPorId(Long id){
+        logger.info("Iniciando busca de sessão por ID: {}", id);
         sessaoValidation.validarSessao(id);
         return sessaoRepository.findById(id);
     }
 
     @Transactional
     public void cancelarSessao(Long idSessao){
+        logger.info("Canelando sessão de ID: {}", idSessao);
         sessaoValidation.validarSessao(idSessao);
         Sessao sessao = sessaoRepository.findById(idSessao).get();
         sessao.setAtiva(false);
@@ -72,6 +76,7 @@ public class SessaoService {
 
     @Transactional
     public void adicionarReservasSessao(Reserva reserva){
+        logger.info("Adicionando reserva ID: {} à sessão ID: {}", reserva.getId(), reserva.getSessao().getId());
         Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
         sessao.getReservas().add(reserva);
         sessaoRepository.save(sessao);
@@ -79,6 +84,7 @@ public class SessaoService {
 
     @Transactional
     public void removerReservasSessao(Reserva reserva){
+        logger.info("Removendo reserva ID: {} da sessão ID: {}", reserva.getId(), reserva.getSessao().getId());
         Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
         sessao.getReservas().remove(reserva);
         sessaoRepository.save(sessao);

@@ -8,6 +8,8 @@ import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.Optional;
 
 @Service
 public class ReservaService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReservaService.class);
 
     private final ReservaRepository reservaRepository;
 
@@ -47,6 +51,7 @@ public class ReservaService {
 
     @Transactional
     public Reserva adicionarReserva(Long idCliente, Long idSessao){
+        logger.info("Adicionando reserva para o cliente de ID: {} na sessão de ID: {}", idCliente, idSessao);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Sessao sessao = sessaoRepository.findById(idSessao).get();
         reservaValidation.validarSessao(sessao);
@@ -65,6 +70,7 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public List<Reserva> listarReservas(Long idCliente){
+        logger.info("Listando reservas para o cliente de ID: {}", idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         sessaoValidation.validarCliente(cliente);
         List<Reserva> reservas = reservaRepository.findAllByIdCliente(idCliente);
@@ -74,6 +80,7 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public Optional<Reserva> buscarReservaPorId(Long idCliente, Long idReserva){
+        logger.info("Buscando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Reserva reserva = reservaRepository.getReferenceById(idReserva);
         sessaoValidation.validarCliente(cliente);
@@ -83,6 +90,7 @@ public class ReservaService {
 
     @Transactional
     public void cancelarReserva(Long idCliente, Long idReserva){
+        logger.info("Cancelando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Reserva reserva = reservaRepository.getReferenceById(idReserva);
         sessaoValidation.validarCliente(cliente);
