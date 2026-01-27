@@ -46,8 +46,8 @@ public class ReservaController implements SwaggerReservaController {
     }
 
     @Override
-    public ResponseEntity<Void> cancelarReserva(Long id) {
-        reservaService.cancelarReserva(id);
+    public ResponseEntity<Void> cancelarReserva(Long idCliente, Long idReserva) {
+        reservaService.cancelarReserva(idCliente, idReserva);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 }

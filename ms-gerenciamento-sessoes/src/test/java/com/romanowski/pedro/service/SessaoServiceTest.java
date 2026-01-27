@@ -341,7 +341,7 @@ class SessaoServiceTest {
         when(sessaoRepository.save(any(Sessao.class))).thenReturn(sessao);
 
         // When
-        sessaoService.atualizarReservasSessao(reserva);
+        sessaoService.adicionarReservasSessao(reserva);
 
         // Then
         assertEquals(1, sessao.getReservas().size());
@@ -375,8 +375,8 @@ class SessaoServiceTest {
         when(sessaoRepository.save(any(Sessao.class))).thenReturn(sessao);
 
         // When
-        sessaoService.atualizarReservasSessao(reserva1);
-        sessaoService.atualizarReservasSessao(reserva2);
+        sessaoService.adicionarReservasSessao(reserva1);
+        sessaoService.adicionarReservasSessao(reserva2);
 
         // Then
         assertEquals(2, sessao.getReservas().size());

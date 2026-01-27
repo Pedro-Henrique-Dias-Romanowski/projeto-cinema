@@ -71,9 +71,16 @@ public class SessaoService {
     }
 
     @Transactional
-    public void atualizarReservasSessao(Reserva reserva){
+    public void adicionarReservasSessao(Reserva reserva){
         Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
         sessao.getReservas().add(reserva);
+        sessaoRepository.save(sessao);
+    }
+
+    @Transactional
+    public void removerReservasSessao(Reserva reserva){
+        Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
+        sessao.getReservas().remove(reserva);
         sessaoRepository.save(sessao);
     }
 }

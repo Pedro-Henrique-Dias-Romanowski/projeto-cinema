@@ -3,7 +3,9 @@ package com.romanowski.pedro.service.validation;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
 import com.romanowski.pedro.exceptions.ListaReservasVaziaException;
+import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
+import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +31,9 @@ class ReservaValidationTest {
     @Mock
     private SessaoRepository sessaoRepository;
 
+    @Mock
+    private ReservaRepository reservaRepository;
+
     @InjectMocks
     private ReservaValidation reservaValidation;
 
@@ -40,6 +45,7 @@ class ReservaValidationTest {
         // Inicializar mensagens usando ReflectionTestUtils
         ReflectionTestUtils.setField(reservaValidation, "mensagemSessaoNaoEncontrada", "Sessao não encontrada");
         ReflectionTestUtils.setField(reservaValidation, "mensagemListaReservasVazia", "Lista de reservas vazia");
+        ReflectionTestUtils.setField(reservaValidation, "mensagemReservaNaoEncontrada", "Reserva não encontrada");
 
         // Dados de teste
         sessao = Sessao.builder()
@@ -289,5 +295,118 @@ class ReservaValidationTest {
         );
 
         assertEquals("Lista de reservas vazia", exception.getMessage());
+    }
+
+    // ================= TESTES PARA VALIDAR CANCELAMENTO DE RESERVA =================
+
+    @Test
+    @DisplayName("Deve validar cancelamento de reserva com sucesso")
+    void deveValidarCancelamentoDeReservaComSucesso() {
+        // Given
+        Long idCliente = 1L;
+
+        when(reservaRepository.existsById(reserva.getId())).thenReturn(true);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarCancelamentoReserva(idCliente, reserva));
+
+        verify(reservaRepository, times(1)).existsById(reserva.getId());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando reserva não existe")
+    void deveLancarExcecaoQuandoReservaNaoExiste() {
+        // Given
+        Long idCliente = 1L;
+
+        when(reservaRepository.existsById(reserva.getId())).thenReturn(false);
+
+        // When & Then
+        ReservaNaoEncontradaException exception = assertThrows(
+                ReservaNaoEncontradaException.class,
+                () -> reservaValidation.validarCancelamentoReserva(idCliente, reserva)
+        );
+
+        assertEquals("Reserva não encontrada", exception.getMessage());
+        verify(reservaRepository, times(1)).existsById(reserva.getId());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando reserva não pertence ao cliente")
+    void deveLancarExcecaoQuandoReservaNaoPertenceAoCliente() {
+        // Given
+        Long idCliente = 1L;
+        Long idClienteDiferente = 2L;
+
+        Reserva reservaOutroCliente = Reserva.builder()
+                .id(1L)
+                .idCliente(idClienteDiferente)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva de outro cliente.")
+                .build();
+
+        when(reservaRepository.existsById(reservaOutroCliente.getId())).thenReturn(true);
+
+        // When & Then
+        ReservaNaoEncontradaException exception = assertThrows(
+                ReservaNaoEncontradaException.class,
+                () -> reservaValidation.validarCancelamentoReserva(idCliente, reservaOutroCliente)
+        );
+
+        assertEquals("Reserva não encontrada", exception.getMessage());
+        verify(reservaRepository, times(1)).existsById(reservaOutroCliente.getId());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando reserva não existe e não pertence ao cliente")
+    void deveLancarExcecaoQuandoReservaNaoExisteENaoPertenceAoCliente() {
+        // Given
+        Long idCliente = 1L;
+        Long idClienteDiferente = 2L;
+
+        Reserva reservaInvalida = Reserva.builder()
+                .id(999L)
+                .idCliente(idClienteDiferente)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva inválida.")
+                .build();
+
+        when(reservaRepository.existsById(reservaInvalida.getId())).thenReturn(false);
+
+        // When & Then
+        ReservaNaoEncontradaException exception = assertThrows(
+                ReservaNaoEncontradaException.class,
+                () -> reservaValidation.validarCancelamentoReserva(idCliente, reservaInvalida)
+        );
+
+        assertEquals("Reserva não encontrada", exception.getMessage());
+        verify(reservaRepository, times(1)).existsById(reservaInvalida.getId());
+    }
+
+    @Test
+    @DisplayName("Deve validar cancelamento para cliente correto")
+    void deveValidarCancelamentoParaClienteCorreto() {
+        // Given
+        Long idCliente = 1L;
+
+        Reserva reservaCliente1 = Reserva.builder()
+                .id(1L)
+                .idCliente(idCliente)
+                .sessao(sessao)
+                .pagamentoConfirmado(false)
+                .ativa(true)
+                .mensagem("Reserva do cliente 1.")
+                .build();
+
+        when(reservaRepository.existsById(reservaCliente1.getId())).thenReturn(true);
+
+        // When & Then
+        assertDoesNotThrow(() -> reservaValidation.validarCancelamentoReserva(idCliente, reservaCliente1));
+
+        verify(reservaRepository, times(1)).existsById(reservaCliente1.getId());
     }
 }

@@ -3,16 +3,18 @@ package com.romanowski.pedro.service;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
+import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -28,6 +30,12 @@ public class ReservaService {
 
     @Value("${mensagem.reserva.feita}")
     private String mensagemReservaFeita;
+
+    @Value("${mensagem.reserva.cancelada}")
+    private String mensagemReservaCancelada;
+
+    @Value("${mensagem.reserva.inexistente}")
+    private String mensagemReservaNaoEncontrada;
 
     public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation) {
         this.reservaRepository = reservaRepository;
@@ -53,12 +61,12 @@ public class ReservaService {
                 .mensagem(mensagemReservaFeita)
                 .build();
         Reserva reservaSalva = reservaRepository.save(reserva);
-        sessaoService.atualizarReservasSessao(reservaSalva);
+        sessaoService.adicionarReservasSessao(reservaSalva);
         return reservaRepository.save(reservaSalva);
     }
 
+    @Transactional(readOnly = true)
     public List<Reserva> listarReservas(Long idCliente){
-        // todo implementar listagem de reservas
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         sessaoValidation.validarCliente(cliente);
         List<Reserva> reservas = reservaRepository.findAllByIdCliente(idCliente);
@@ -71,7 +79,15 @@ public class ReservaService {
         return null;
     }
 
-    public void cancelarReserva(Long id){
-        // todo implementar cancelamento de reserva
-    }
+    @Transactional
+    public void cancelarReserva(Long idCliente, Long idReserva){
+        Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
+        Reserva reserva = reservaRepository.getReferenceById(idReserva);
+        sessaoValidation.validarCliente(cliente);
+        reservaValidation.validarCancelamentoReserva(idCliente, reserva);
+        reserva.setAtiva(false);
+        reserva.setMensagem(mensagemReservaCancelada);
+        reservaRepository.save(reserva);
+        sessaoService.removerReservasSessao(reserva);
+        }
 }

@@ -21,7 +21,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -90,7 +92,7 @@ class ReservaControllerTest {
         when(reservaMapper.toResponseDTO(any(Reserva.class))).thenReturn(reservaResponseDTO);
 
         // When & Then
-        mockMvc.perform(post("/v1/reservas/{idSessao}/{idCliente}", idSessao, idCliente)
+        mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente, idSessao)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -136,14 +138,14 @@ class ReservaControllerTest {
         when(reservaMapper.toResponseDTO(reserva2)).thenReturn(reservaResponseDTO2);
 
         // When & Then - Cliente 1
-        mockMvc.perform(post("/v1/reservas/{idSessao}/{idCliente}", idSessao, idCliente1)
+        mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente1, idSessao)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.idCliente").value(1L));
 
         // When & Then - Cliente 2
-        mockMvc.perform(post("/v1/reservas/{idSessao}/{idCliente}", idSessao, idCliente2)
+        mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente2, idSessao)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2L))
@@ -195,14 +197,14 @@ class ReservaControllerTest {
         when(reservaMapper.toResponseDTO(reserva2)).thenReturn(reservaResponseDTO2);
 
         // When & Then - Sessão 1
-        mockMvc.perform(post("/v1/reservas/{idSessao}/{idCliente}", idSessao1, idCliente)
+        mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente, idSessao1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.idSessao").value(1L));
 
         // When & Then - Sessão 2
-        mockMvc.perform(post("/v1/reservas/{idSessao}/{idCliente}", idSessao2, idCliente)
+        mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente, idSessao2)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2L))
@@ -355,5 +357,49 @@ class ReservaControllerTest {
 
         verify(reservaService, times(1)).listarReservas(idCliente1);
         verify(reservaService, times(1)).listarReservas(idCliente2);
+    }
+
+
+    @Test
+    @DisplayName("Deve cancelar uma reserva com sucesso")
+    void deveCancelarReservaComSucesso() throws Exception {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva);
+
+        // When & Then
+        mockMvc.perform(delete("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(reservaService, times(1)).cancelarReserva(idCliente, idReserva);
+    }
+
+
+    @Test
+    @DisplayName("Deve cancelar múltiplas reservas do mesmo cliente")
+    void deveCancelarMultiplasReservasDoMesmoCliente() throws Exception {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva1 = 1L;
+        Long idReserva2 = 2L;
+
+        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva1);
+        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva2);
+
+        // When & Then - Cancelar primeira reserva
+        mockMvc.perform(delete("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // When & Then - Cancelar segunda reserva
+        mockMvc.perform(delete("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva2)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(reservaService, times(1)).cancelarReserva(idCliente, idReserva1);
+        verify(reservaService, times(1)).cancelarReserva(idCliente, idReserva2);
     }
 }

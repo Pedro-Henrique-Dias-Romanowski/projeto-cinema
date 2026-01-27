@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface SwaggerReservaController {
 
-    @PostMapping("/reservas/{idSessao}/{idCliente}" )
+    @PostMapping("/reservas/{idCliente}/{idSessao}" )
     ResponseEntity<ReservaResponseDTO> criarReserva(@PathVariable Long idCliente, @PathVariable Long idSessao);
 
     @GetMapping("/reservas/{idCliente}")
@@ -20,6 +20,6 @@ public interface SwaggerReservaController {
     @GetMapping("/reservas/{idCliente}/{idReserva}")
     ResponseEntity<ReservaResponseDTO> buscarReservaPorId(@PathVariable Long idCliente, @PathVariable Long idReserva);
 
-    @DeleteMapping("/reservas/{id}")
-    ResponseEntity<Void> cancelarReserva(@PathVariable Long id);
+    @DeleteMapping("/reservas/{idCliente}/{idReserva}")
+    ResponseEntity<Void> cancelarReserva(@PathVariable Long idCliente, @PathVariable Long idReserva);
 }
