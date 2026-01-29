@@ -28,6 +28,7 @@ public class PagamentoService {
         logger.info("Iniciando pagamento para o cliente com id: {} e reserva com id: {}", idCliente, idReserva);
         clienteValidation.validarBuscaPorCliente(idCliente);
         pagamentoValidation.validarExistenciaReserva(idCliente, idReserva);
+        pagamentoValidation.validarReservaAtivaOuInativa(idCliente, idReserva);
         pagamentoValidation.validarSaldoCliente(idCliente, valor);
         Pagamento pagamento = Pagamento.builder().
                 idCliente(idCliente).

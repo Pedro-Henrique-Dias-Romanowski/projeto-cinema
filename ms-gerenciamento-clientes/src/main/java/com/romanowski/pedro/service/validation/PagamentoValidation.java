@@ -1,6 +1,7 @@
 package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.dto.response.ReservaResponseDTO;
+import com.romanowski.pedro.exceptions.ReservaInativaException;
 import com.romanowski.pedro.exceptions.ReservaInexistenteException;
 import com.romanowski.pedro.exceptions.SaldoInsuficienteException;
 import com.romanowski.pedro.feign.ReservaFeignClient;
@@ -22,6 +23,9 @@ public class PagamentoValidation {
     @Value("${reserva.nao.encontrada}")
     private String mensagemReservaNaoEncontrada;
 
+    @Value("${reserva.inativa}")
+    private String mensagemReservaInativa;
+
     @Value("${cliente.saldo.insuficiente}")
     private String mensagemSaldoInsuficiente;
 
@@ -35,6 +39,14 @@ public class PagamentoValidation {
         if (reservaResponseDTO == null) {
             logger.error("Reserva com id {} para o cliente com id {} não encontrada", idReserva, idCliente);
             throw new ReservaInexistenteException(mensagemReservaNaoEncontrada);
+        }
+    }
+
+    public void validarReservaAtivaOuInativa(Long idCliente, Long idReserva) {
+        ReservaResponseDTO reservaResponseDTO = reservaFeignClient.buscarReservaPorId(idCliente, idReserva);
+        if (!reservaResponseDTO.ativa()) {
+            logger.error("Reserva com id {} para o cliente com id {} está inativa", idReserva, idCliente);
+            throw new ReservaInativaException(mensagemReservaInativa);
         }
     }
 
