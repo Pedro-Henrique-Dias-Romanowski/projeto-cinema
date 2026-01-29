@@ -2,9 +2,11 @@ package com.romanowski.pedro.service.validation;
 
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
+import com.romanowski.pedro.entity.StatusPagamento;
 import com.romanowski.pedro.exceptions.ListaReservasVaziaException;
 import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
+import com.romanowski.pedro.exceptions.ValorPagamentoSessaoInvalido;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.SessaoService;
@@ -32,6 +34,9 @@ public class ReservaValidation {
 
     @Value("${mensagem.reserva.inexistente}")
     private String mensagemReservaNaoEncontrada;
+
+    @Value("${mensagem.pagamento.invalido}")
+    private String mensagemValorPagamentoInvalido;
 
     public ReservaValidation(SessaoRepository sessaoRepository, ReservaRepository reservaRepository) {
         this.sessaoRepository = sessaoRepository;
@@ -62,6 +67,21 @@ public class ReservaValidation {
         if (!reservaRepository.existsById(reserva.getId()) || !reserva.getIdCliente().equals(idCliente)){
             logger.error("Nenhuma reserva encontrada para o cliente com ID: {}", idCliente);
             throw new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada);
+        }
+    }
+
+    public void validarPagamentoSessao(StatusPagamento statusPagamento){
+        Reserva reserva = reservaRepository.findById(statusPagamento.getIdReserva()).orElse(null);
+        if  (reserva == null){
+            logger.error("Reserva não encontrada para o pagamento");
+            throw new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada);
+        }
+        var sessao = sessaoRepository.findById(reserva.getSessao().getId()).orElseThrow(()
+        -> new SessaoNaoEcontradaException(mensagemSessaoNaoEncontrada));
+        var valorSessao = sessao.getPreco();
+        if (statusPagamento.getValor() < valorSessao){
+            logger.error("Valor do pagamento é menor que o valor da sessão");
+            throw new ValorPagamentoSessaoInvalido(mensagemValorPagamentoInvalido);
         }
     }
 }

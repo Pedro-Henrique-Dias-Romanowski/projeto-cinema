@@ -80,6 +80,7 @@ class SessaoControllerTest {
                 1,
                 "Filme Teste",
                 dataHoraSessao,
+                50.0,
                 true
         );
     }
@@ -100,6 +101,7 @@ class SessaoControllerTest {
                 .andExpect(jsonPath("$.idSessao").value(1L))
                 .andExpect(jsonPath("$.sala").value(1))
                 .andExpect(jsonPath("$.tituloFilme").value("Filme Teste"))
+                .andExpect(jsonPath("$.preco").value(50.0))
                 .andExpect(jsonPath("$.ativa").value(true));
 
         verify(sessaoMapper, times(1)).toEntity(any(SessaoRequestDTO.class));
@@ -127,6 +129,7 @@ class SessaoControllerTest {
                 2,
                 "Filme Teste 2",
                 LocalDateTime.of(2026, 1, 26, 18, 0),
+                45.0,
                 true
         );
 
@@ -144,8 +147,10 @@ class SessaoControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].idSessao").value(1L))
                 .andExpect(jsonPath("$[0].tituloFilme").value("Filme Teste"))
+                .andExpect(jsonPath("$[0].preco").value(50.0))
                 .andExpect(jsonPath("$[1].idSessao").value(2L))
-                .andExpect(jsonPath("$[1].tituloFilme").value("Filme Teste 2"));
+                .andExpect(jsonPath("$[1].tituloFilme").value("Filme Teste 2"))
+                .andExpect(jsonPath("$[1].preco").value(45.0));
 
         verify(sessaoService, times(1)).listarSessoes();
         verify(sessaoMapper, times(2)).toResponseDTO(any(Sessao.class));
@@ -183,6 +188,7 @@ class SessaoControllerTest {
                 .andExpect(jsonPath("$.idSessao").value(1L))
                 .andExpect(jsonPath("$.tituloFilme").value("Filme Teste"))
                 .andExpect(jsonPath("$.sala").value(1))
+                .andExpect(jsonPath("$.preco").value(50.0))
                 .andExpect(jsonPath("$.ativa").value(true));
 
         verify(sessaoService, times(1)).procurarSessaoPorId(sessaoId);

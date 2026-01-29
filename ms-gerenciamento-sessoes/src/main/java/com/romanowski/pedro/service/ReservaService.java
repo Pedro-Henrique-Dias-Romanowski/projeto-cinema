@@ -3,6 +3,8 @@ package com.romanowski.pedro.service;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.Reserva;
 import com.romanowski.pedro.entity.Sessao;
+import com.romanowski.pedro.entity.StatusPagamento;
+import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
@@ -30,6 +32,7 @@ public class ReservaService {
     private final SessaoService sessaoService;
     private final ReservaValidation reservaValidation;
 
+
     @Value("${mensagem.reserva.feita}")
     private String mensagemReservaFeita;
 
@@ -38,6 +41,9 @@ public class ReservaService {
 
     @Value("${mensagem.reserva.inexistente}")
     private String mensagemReservaNaoEncontrada;
+
+    @Value("${mensagem.pagamento.concluido}")
+    private String mensagemPagamentoConfirmado;
 
     public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation) {
         this.reservaRepository = reservaRepository;
@@ -82,7 +88,8 @@ public class ReservaService {
     public Optional<Reserva> buscarReservaPorId(Long idCliente, Long idReserva){
         logger.info("Buscando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
-        Reserva reserva = reservaRepository.getReferenceById(idReserva);
+        Reserva reserva = reservaRepository.findById(idReserva)
+                .orElseThrow(() -> new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada));
         sessaoValidation.validarCliente(cliente);
         reservaValidation.validarBuscaReserva(idCliente, reserva);
         return reservaRepository.findByIdAndIdCliente(idReserva, idCliente);
@@ -92,12 +99,23 @@ public class ReservaService {
     public void cancelarReserva(Long idCliente, Long idReserva){
         logger.info("Cancelando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
-        Reserva reserva = reservaRepository.getReferenceById(idReserva);
+        Reserva reserva = reservaRepository.findById(idReserva)
+                .orElseThrow(() -> new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada));
         sessaoValidation.validarCliente(cliente);
         reservaValidation.validarBuscaReserva(idCliente, reserva);
         reserva.setAtiva(false);
         reserva.setMensagem(mensagemReservaCancelada);
         reservaRepository.save(reserva);
         sessaoService.removerReservasSessao(reserva);
+    }
+
+    @Transactional
+    public void verificarFilaPagamento(StatusPagamento statusPagamento){
+        reservaValidation.validarPagamentoSessao(statusPagamento);
+        Reserva reserva = reservaRepository.findById(statusPagamento.getIdReserva())
+                .orElseThrow(() -> new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada));
+        reserva.setPagamentoConfirmado(true);
+        reserva.setMensagem(mensagemPagamentoConfirmado);
+        reservaRepository.save(reserva);
     }
 }

@@ -40,6 +40,15 @@ public class AMQPConfiguration {
     public Queue filaDetalhesPedido(){
         return QueueBuilder
                 .nonDurable("pagamentos.detalhes")
+                .deadLetterExchange("pagamentos.dlx")
+                .deadLetterRoutingKey("pagamentos.detalhes.dlq")
+                .build();
+    }
+
+    @Bean
+    public Queue filaDetalhesPedidoDLQ(){
+        return QueueBuilder
+                .nonDurable("pagamentos.detalhes.dlq")
                 .build();
     }
 
@@ -51,8 +60,22 @@ public class AMQPConfiguration {
     }
 
     @Bean
+    public DirectExchange deadLetterExchange(){
+        return ExchangeBuilder
+                .directExchange("pagamentos.dlx")
+                .build();
+    }
+
+    @Bean
     public Binding bindPagamentoPedido(){
         return BindingBuilder.bind(filaDetalhesPedido())
                 .to(fanoutExchange());
+    }
+
+    @Bean
+    public Binding bindPagamentoPedidoDLQ(){
+        return BindingBuilder.bind(filaDetalhesPedidoDLQ())
+                .to(deadLetterExchange())
+                .with("pagamentos.detalhes.dlq");
     }
 }

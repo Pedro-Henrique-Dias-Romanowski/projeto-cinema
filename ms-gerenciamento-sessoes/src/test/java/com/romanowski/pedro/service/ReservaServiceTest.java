@@ -518,7 +518,7 @@ class ReservaServiceTest {
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reserva);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
         doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
         when(reservaRepository.findByIdAndIdCliente(idReserva, idCliente)).thenReturn(Optional.of(reserva));
@@ -536,7 +536,7 @@ class ReservaServiceTest {
         assertFalse(resultado.get().getPagamentoConfirmado());
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva);
+        verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
         verify(reservaValidation, times(1)).validarBuscaReserva(idCliente, reserva);
         verify(reservaRepository, times(1)).findByIdAndIdCliente(idReserva, idCliente);
@@ -550,7 +550,7 @@ class ReservaServiceTest {
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reserva);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
                 .when(sessaoValidation).validarCliente(Optional.empty());
 
@@ -560,7 +560,7 @@ class ReservaServiceTest {
         });
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva);
+        verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
         verify(reservaValidation, never()).validarBuscaReserva(anyLong(), any());
         verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), anyLong());
@@ -583,7 +583,7 @@ class ReservaServiceTest {
                 .build();
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reservaOutroCliente);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reservaOutroCliente));
         doNothing().when(sessaoValidation).validarCliente(any());
         doThrow(new ReservaNaoEncontradaException("Reserva não encontrada"))
                 .when(reservaValidation).validarBuscaReserva(idCliente, reservaOutroCliente);
@@ -594,7 +594,7 @@ class ReservaServiceTest {
         });
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva);
+        verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
         verify(reservaValidation, times(1)).validarBuscaReserva(idCliente, reservaOutroCliente);
         verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), anyLong());
@@ -622,8 +622,8 @@ class ReservaServiceTest {
 
         when(clienteFeignClient.obterClientePorId(idCliente1)).thenReturn(Optional.of(clienteResponseDTO));
         when(clienteFeignClient.obterClientePorId(idCliente2)).thenReturn(Optional.of(cliente2));
-        when(reservaRepository.getReferenceById(idReserva1)).thenReturn(reserva);
-        when(reservaRepository.getReferenceById(idReserva2)).thenReturn(reserva2);
+        when(reservaRepository.findById(idReserva1)).thenReturn(Optional.ofNullable(reserva));
+        when(reservaRepository.findById(idReserva2)).thenReturn(Optional.ofNullable(reserva2));
         doNothing().when(sessaoValidation).validarCliente(any());
         doNothing().when(reservaValidation).validarBuscaReserva(anyLong(), any());
         when(reservaRepository.findByIdAndIdCliente(idReserva1, idCliente1)).thenReturn(Optional.of(reserva));
@@ -654,7 +654,7 @@ class ReservaServiceTest {
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reserva);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
         doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
@@ -665,7 +665,7 @@ class ReservaServiceTest {
 
         // Then
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva);
+        verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
         verify(reservaValidation, times(1)).validarBuscaReserva(idCliente, reserva);
         verify(reservaRepository, times(1)).save(reserva);
@@ -680,7 +680,7 @@ class ReservaServiceTest {
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reserva);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
         doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
@@ -703,7 +703,7 @@ class ReservaServiceTest {
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reserva);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
                 .when(sessaoValidation).validarCliente(Optional.empty());
 
@@ -713,7 +713,7 @@ class ReservaServiceTest {
         });
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva);
+        verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
         verify(reservaValidation, never()).validarBuscaReserva(anyLong(), any());
         verify(reservaRepository, never()).save(any());
@@ -737,7 +737,7 @@ class ReservaServiceTest {
                 .build();
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva)).thenReturn(reservaOutroCliente);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reservaOutroCliente));
         doNothing().when(sessaoValidation).validarCliente(any());
         doThrow(new ReservaNaoEncontradaException("Reserva não encontrada"))
                 .when(reservaValidation).validarBuscaReserva(idCliente, reservaOutroCliente);
@@ -770,8 +770,8 @@ class ReservaServiceTest {
                 .build();
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
-        when(reservaRepository.getReferenceById(idReserva1)).thenReturn(reserva);
-        when(reservaRepository.getReferenceById(idReserva2)).thenReturn(reserva2);
+        when(reservaRepository.findById(idReserva1)).thenReturn(Optional.of(reserva));
+        when(reservaRepository.findById(idReserva2)).thenReturn(Optional.of(reserva2));
         doNothing().when(sessaoValidation).validarCliente(any());
         doNothing().when(reservaValidation).validarBuscaReserva(eq(idCliente), any());
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -782,8 +782,8 @@ class ReservaServiceTest {
         reservaService.cancelarReserva(idCliente, idReserva2);
 
         // Then
-        verify(reservaRepository, times(1)).getReferenceById(idReserva1);
-        verify(reservaRepository, times(1)).getReferenceById(idReserva2);
+        verify(reservaRepository, times(1)).findById(idReserva1);
+        verify(reservaRepository, times(1)).findById(idReserva2);
         verify(reservaRepository, times(2)).save(any(Reserva.class));
         verify(sessaoService, times(2)).removerReservasSessao(any(Reserva.class));
     }

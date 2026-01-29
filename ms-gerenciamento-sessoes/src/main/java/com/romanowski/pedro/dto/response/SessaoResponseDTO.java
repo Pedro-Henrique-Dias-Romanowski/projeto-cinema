@@ -10,6 +10,7 @@ public record SessaoResponseDTO(
         String tituloFilme,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm")
         LocalDateTime dataHoraSessao,
+        Double preco,
         Boolean ativa
 ) {
 }
