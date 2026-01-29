@@ -36,7 +36,7 @@ public class PagamentoValidation {
 
     public void validarExistenciaReserva(Long idCliente, Long idReserva) {
         ReservaResponseDTO reservaResponseDTO = reservaFeignClient.buscarReservaPorId(idCliente, idReserva);
-        if (reservaResponseDTO == null) {
+        if (reservaResponseDTO == null || !reservaResponseDTO.idCliente().equals(idCliente)) {
             logger.error("Reserva com id {} para o cliente com id {} não encontrada", idReserva, idCliente);
             throw new ReservaInexistenteException(mensagemReservaNaoEncontrada);
         }

@@ -97,6 +97,51 @@ class PagamentoValidationTest {
     }
 
     @Test
+    @DisplayName("Deve lançar ReservaInexistenteException quando idCliente da reserva não corresponde")
+    void deveLancarExcecaoQuandoIdClienteNaoCorresponde() {
+        // Arrange
+        ReservaResponseDTO reservaDeOutroCliente = new ReservaResponseDTO(
+                idReserva,
+                2L, // ID de outro cliente
+                1L,
+                false,
+                true,
+                "Reserva de outro cliente"
+        );
+        when(reservaFeignClient.buscarReservaPorId(idCliente, idReserva)).thenReturn(reservaDeOutroCliente);
+
+        // Act & Assert
+        ReservaInexistenteException exception = assertThrows(
+                ReservaInexistenteException.class,
+                () -> pagamentoValidation.validarExistenciaReserva(idCliente, idReserva)
+        );
+
+        assertEquals("Reserva não encontrada", exception.getMessage());
+        verify(reservaFeignClient, times(1)).buscarReservaPorId(idCliente, idReserva);
+    }
+
+
+    @Test
+    @DisplayName("Deve validar apenas quando idCliente corresponde exatamente")
+    void deveValidarApenasQuandoIdClienteCorrespondeExatamente() {
+        // Arrange
+        Long idClienteCorreto = 5L;
+        ReservaResponseDTO reservaCorreta = new ReservaResponseDTO(
+                idReserva,
+                idClienteCorreto,
+                1L,
+                false,
+                true,
+                "Reserva do cliente correto"
+        );
+        when(reservaFeignClient.buscarReservaPorId(idClienteCorreto, idReserva)).thenReturn(reservaCorreta);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> pagamentoValidation.validarExistenciaReserva(idClienteCorreto, idReserva));
+        verify(reservaFeignClient, times(1)).buscarReservaPorId(idClienteCorreto, idReserva);
+    }
+
+    @Test
     @DisplayName("Deve validar reserva para diferentes clientes")
     void deveValidarReservaParaDiferentesClientes() {
         // Arrange
@@ -154,9 +199,27 @@ class PagamentoValidationTest {
         verify(reservaFeignClient, times(1)).buscarReservaPorId(idCliente, idReserva);
     }
 
-
     @Test
-    @DisplayName("Deve validar reserva ativa com sucesso")
+    @DisplayName("Deve validar múltiplas reservas do mesmo cliente")
+    void deveValidarMultiplasReservasMesmoCliente() {
+        // Arrange
+        Long idReserva1 = 100L;
+        Long idReserva2 = 101L;
+        ReservaResponseDTO reserva1 = new ReservaResponseDTO(idReserva1, idCliente, 1L, false, true, "Reserva 1");
+        ReservaResponseDTO reserva2 = new ReservaResponseDTO(idReserva2, idCliente, 2L, false, true, "Reserva 2");
+
+        when(reservaFeignClient.buscarReservaPorId(idCliente, idReserva1)).thenReturn(reserva1);
+        when(reservaFeignClient.buscarReservaPorId(idCliente, idReserva2)).thenReturn(reserva2);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> pagamentoValidation.validarExistenciaReserva(idCliente, idReserva1));
+        assertDoesNotThrow(() -> pagamentoValidation.validarExistenciaReserva(idCliente, idReserva2));
+
+        verify(reservaFeignClient, times(1)).buscarReservaPorId(idCliente, idReserva1);
+        verify(reservaFeignClient, times(1)).buscarReservaPorId(idCliente, idReserva2);
+    }
+
+    // ==================== Testes para validarReservaAtivaOuInativa ====================
     void deveValidarReservaAtivaComSucesso() {
         // Arrange
         when(reservaFeignClient.buscarReservaPorId(idCliente, idReserva)).thenReturn(reservaResponseDTO);
