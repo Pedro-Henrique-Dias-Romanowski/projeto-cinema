@@ -24,3 +24,18 @@ spring:
     port: 5672
     username: guest
     password: guest
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USER:pedro.romanowski02@gmail.com}
+    password: ${MAIL_PASSWORD:vfvfrjgeoogkvigb}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000

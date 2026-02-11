@@ -4,6 +4,7 @@ import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.exceptions.EmailExistenteException;
 import com.romanowski.pedro.exceptions.SenhaInvalidaExcpetion;
 import com.romanowski.pedro.repository.ClienteRepository;
+import com.romanowski.pedro.service.email.EmailService;
 import com.romanowski.pedro.service.validation.ClienteValidation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +36,9 @@ class ClienteServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private ClienteService clienteService;
@@ -433,6 +438,8 @@ class ClienteServiceTest {
         Long clienteId = 1L;
         doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
         doNothing().when(clienteRepository).deleteById(clienteId);
+
+        when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
 
         // Act & Assert
         assertDoesNotThrow(() -> clienteService.deletarCliente(clienteId));
