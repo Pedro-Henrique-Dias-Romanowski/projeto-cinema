@@ -17,15 +17,16 @@ public interface ClienteControllerSwagger {
     @PostMapping("/clientes")
     ResponseEntity<ClienteResponseDTO> cadastrarCliente(@Valid @RequestBody ClienteRequestDTO clienteRequestDTO);
 
-    @Operation(summary = "Cadastrar cliente", description = "Permite listar os clientes que estão cadastrados dentro do cinema.")
+    @Operation(summary = "Listar clientes", description = "Permite listar os clientes que estão cadastrados dentro do cinema.")
     @GetMapping("/clientes")
     ResponseEntity<List<ClienteResponseDTO>> listarClientes();
 
-    @Operation(summary = "Cadastrar cliente", description = "Permite a busca por um cliente específico através do seu ID.")
+    @Operation(summary = "Buscar cliente por ID", description = "Permite a busca por um cliente específico através do seu ID.")
     @GetMapping("/clientes/{id}")
     ResponseEntity<ClienteResponseDTO> buscarClientePorId(@PathVariable @Valid Long id);
 
-    @Operation(summary = "Cadastrar cliente", description = "Permite a exclusão de um cliente específico através do seu ID.")
+    @Operation(summary = "Exclusão de um cliente", description = "Permite a exclusão de um cliente específico através do seu ID.")
+    @ResponseStatus(code = org.springframework.http.HttpStatus.NO_CONTENT)
     @DeleteMapping("/clientes/{id}")
     ResponseEntity<Void> deletarCliente(@PathVariable Long id);
 }

@@ -28,7 +28,7 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
     username: ${MAIL_USER:pedro.romanowski02@gmail.com}
-    password: ${MAIL_PASSWORD:vfvfrjgeoogkvigb}
+    password: ${MAIL_PASSWORD}
     protocol: smtp
     properties:
       mail:
@@ -39,3 +39,9 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+springdoc:
+  api-docs:
+    path: /book-service/v3/api-docs
+  swagger-ui:
+    url: /book-service/v3/api-docs
+  override-server-url: true
