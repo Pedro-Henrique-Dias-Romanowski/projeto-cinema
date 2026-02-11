@@ -11,6 +11,7 @@ import com.romanowski.pedro.exceptions.SessaoNaoEcontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
+import com.romanowski.pedro.service.email.EmailService;
 import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,9 @@ class ReservaServiceTest {
 
     @Mock
     private ReservaValidation reservaValidation;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private ReservaService reservaService;
@@ -131,7 +135,7 @@ class ReservaServiceTest {
         verify(sessaoRepository, times(1)).findById(idSessao);
         verify(reservaValidation, times(1)).validarSessao(sessao);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
-        verify(reservaRepository, times(2)).save(any(Reserva.class));
+        verify(reservaRepository, times(1)).save(any(Reserva.class));
         verify(sessaoService, times(1)).adicionarReservasSessao(any(Reserva.class));
     }
 
@@ -259,7 +263,7 @@ class ReservaServiceTest {
         reservaService.adicionarReserva(idCliente, idSessao);
 
         // Then
-        verify(reservaRepository, times(2)).save(reservaCaptor.capture());
+        verify(reservaRepository, times(1)).save(reservaCaptor.capture());
         Reserva reservaCapturada = reservaCaptor.getAllValues().get(0);
 
         assertEquals(sessao, reservaCapturada.getSessao());
@@ -291,7 +295,7 @@ class ReservaServiceTest {
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente1);
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente2);
         verify(sessaoRepository, times(2)).findById(idSessao);
-        verify(reservaRepository, times(4)).save(any(Reserva.class)); // 2 vezes para cada reserva
+        verify(reservaRepository, times(2)).save(any(Reserva.class));
     }
 
     @Test

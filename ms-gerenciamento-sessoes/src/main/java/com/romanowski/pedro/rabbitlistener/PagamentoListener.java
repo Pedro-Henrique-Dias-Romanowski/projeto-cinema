@@ -1,4 +1,4 @@
-package com.romanowski.pedro.config;
+package com.romanowski.pedro.rabbitlistener;
 
 import com.romanowski.pedro.dto.response.StatusPagamentoResponseDTO;
 import com.romanowski.pedro.entity.StatusPagamento;
@@ -6,6 +6,7 @@ import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.exceptions.ValorPagamentoSessaoInvalido;
 import com.romanowski.pedro.mapper.ReservaMapper;
 import com.romanowski.pedro.service.ReservaService;
+import com.romanowski.pedro.service.email.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -18,10 +19,12 @@ public class PagamentoListener {
 
     private final ReservaMapper reservaMapper;
     private final ReservaService reservaService;
+    private final EmailService emailService;
 
-    public PagamentoListener(ReservaMapper reservaMapper, ReservaService reservaService) {
+    public PagamentoListener(ReservaMapper reservaMapper, ReservaService reservaService, EmailService emailService) {
         this.reservaMapper = reservaMapper;
         this.reservaService = reservaService;
+        this.emailService = emailService;
     }
 
     @RabbitListener(queues = "pagamentos.detalhes")

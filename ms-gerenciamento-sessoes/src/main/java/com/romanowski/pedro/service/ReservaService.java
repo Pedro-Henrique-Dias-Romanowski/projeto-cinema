@@ -8,6 +8,7 @@ import com.romanowski.pedro.exceptions.ReservaNaoEncontradaException;
 import com.romanowski.pedro.feign.ClienteFeignClient;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
+import com.romanowski.pedro.service.email.EmailService;
 import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class ReservaService {
     private final ClienteFeignClient clienteFeignClient;
     private final SessaoService sessaoService;
     private final ReservaValidation reservaValidation;
+    private final EmailService emailService;
 
 
     @Value("${mensagem.reserva.feita}")
@@ -45,13 +47,23 @@ public class ReservaService {
     @Value("${mensagem.pagamento.concluido}")
     private String mensagemPagamentoConfirmado;
 
-    public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation) {
+    @Value("${mensagem.email.reserva.confirmada}")
+    private String mensagemReservaConfirmadaEmail;
+
+    @Value("${mensagem.email.reserva.cancelada}")
+    private String mensagemReservaCanceladaEmail;
+
+    @Value("${mensagem.email.pagamento.reserva.concluido}")
+    private String mensagemPagamentoReservaConfirmadoEmail;
+
+    public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation, EmailService emailService) {
         this.reservaRepository = reservaRepository;
         this.sessaoRepository = sessaoRepository;
         this.sessaoValidation = sessaoValidation;
         this.clienteFeignClient = clienteFeignClient;
         this.sessaoService = sessaoService;
         this.reservaValidation = reservaValidation;
+        this.emailService = emailService;
     }
 
 
@@ -71,7 +83,9 @@ public class ReservaService {
                 .build();
         Reserva reservaSalva = reservaRepository.save(reserva);
         sessaoService.adicionarReservasSessao(reservaSalva);
-        return reservaRepository.save(reservaSalva);
+        emailService.enviarEmail(cliente.get().emailCliente(), "Reserva Confirmada", mensagemReservaConfirmadaEmail + reservaSalva.getId() + sessao.getTituloFilme() + sessao.getDataHoraSessao() +
+                sessao.getSala() +  sessao.getPreco());
+        return reservaSalva;
     }
 
     @Transactional(readOnly = true)
@@ -107,15 +121,20 @@ public class ReservaService {
         reserva.setMensagem(mensagemReservaCancelada);
         reservaRepository.save(reserva);
         sessaoService.removerReservasSessao(reserva);
+        emailService.enviarEmail(cliente.get().emailCliente(), "Cancelamento de reserva", mensagemReservaCanceladaEmail + reserva.getId() +reserva.getSessao().getTituloFilme() + reserva.getSessao().getDataHoraSessao() +
+                reserva.getSessao().getSala() +  reserva.getSessao().getPreco());
     }
 
     @Transactional
     public void verificarFilaPagamento(StatusPagamento statusPagamento){
         reservaValidation.validarPagamentoSessao(statusPagamento);
+        Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(statusPagamento.getIdCliente());
         Reserva reserva = reservaRepository.findById(statusPagamento.getIdReserva())
                 .orElseThrow(() -> new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada));
         reserva.setPagamentoConfirmado(true);
         reserva.setMensagem(mensagemPagamentoConfirmado);
         reservaRepository.save(reserva);
+        emailService.enviarEmail(cliente.get().emailCliente(), "Pagamento da reserva confirmado", mensagemPagamentoReservaConfirmadoEmail + reserva.getId() + reserva.getSessao().getTituloFilme() + reserva.getSessao().getDataHoraSessao() +
+                reserva.getSessao().getSala() +  reserva.getSessao().getPreco());
     }
 }
