@@ -35,6 +35,7 @@ public interface SwaggerFilmeController {
     ResponseEntity<FilmeResponseDTO> atualizarFilme(@PathVariable Long id, @RequestBody FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO);
 
     @Operation(summary = "Exclusão de um filme", description = "Permite a exclusão de um filme específico por seu ID.")
+    @ResponseStatus(code = org.springframework.http.HttpStatus.NO_CONTENT)
     @DeleteMapping("/filmes/{id}")
     ResponseEntity<Void> deletarFilme(@PathVariable Long id);
 }
