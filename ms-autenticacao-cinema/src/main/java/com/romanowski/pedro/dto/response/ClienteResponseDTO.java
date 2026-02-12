@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record ClienteResponseDTO(
         @JsonProperty("id")
-        Long idCliente,
+        Long id,
         @JsonProperty("nome")
-        String nomeCliente,
+        String nome,
         @JsonProperty("email")
-        String emailCliente
+        String email
 ) {}
