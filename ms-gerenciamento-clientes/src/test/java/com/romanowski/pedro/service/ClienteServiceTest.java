@@ -22,6 +22,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,6 +71,7 @@ class ClienteServiceTest {
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
         when(passwordEncoder.encode(cliente.getSenha())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
         // Act
         Cliente resultado = clienteService.cadastrarCliente(cliente);
@@ -84,6 +87,7 @@ class ClienteServiceTest {
         verify(clienteValidation, times(1)).validarCadastroCliente(cliente);
         verify(passwordEncoder, times(1)).encode("senha123");
         verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(emailService, times(1)).enviarEmail(eq("joao.silva@email.com"), eq("Bem-vindo ao Cinema"), anyString());
     }
 
     @Test
@@ -432,12 +436,110 @@ class ClienteServiceTest {
     }
 
     @Test
+    @DisplayName("Deve enviar email de boas-vindas ao cadastrar cliente")
+    void deveEnviarEmailBoasVindasAoCadastrarCliente() {
+        // Arrange
+        doNothing().when(clienteValidation).validarCadastroCliente(cliente);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // Act
+        clienteService.cadastrarCliente(cliente);
+
+        // Assert
+        verify(emailService, times(1)).enviarEmail(
+                eq("joao.silva@email.com"),
+                eq("Bem-vindo ao Cinema"),
+                anyString()
+        );
+    }
+
+    @Test
+    @DisplayName("Deve enviar email com o nome correto do cliente no cadastro")
+    void deveEnviarEmailComNomeCorretoNoCadastro() {
+        // Arrange
+        doNothing().when(clienteValidation).validarCadastroCliente(cliente);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // Act
+        clienteService.cadastrarCliente(cliente);
+
+        // Assert
+        verify(emailService, times(1)).enviarEmail(
+                anyString(),
+                anyString(),
+                contains("João Silva")
+        );
+    }
+
+    @Test
+    @DisplayName("Não deve enviar email quando validação falha no cadastro")
+    void naoDeveEnviarEmailQuandoValidacaoFalhaNoCadastro() {
+        // Arrange
+        doThrow(new EmailExistenteException("Email já cadastrado"))
+                .when(clienteValidation).validarCadastroCliente(cliente);
+
+        // Act & Assert
+        assertThrows(EmailExistenteException.class, () -> clienteService.cadastrarCliente(cliente));
+
+        verify(emailService, never()).enviarEmail(anyString(), anyString(), anyString());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+    }
+
+
+    @Test
+    @DisplayName("Deve enviar email de despedida ao deletar cliente")
+    void deveEnviarEmailDespedidaAoDeletarCliente() {
+        // Arrange
+        Long clienteId = 1L;
+        doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
+        when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
+        doNothing().when(clienteRepository).deleteById(clienteId);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // Act
+        clienteService.deletarCliente(clienteId);
+
+        // Assert
+        verify(emailService, times(1)).enviarEmail(
+                eq("joao.silva@email.com"),
+                eq("Tchau, até a próxima"),
+                anyString()
+        );
+    }
+
+    @Test
+    @DisplayName("Deve enviar email com o nome correto do cliente na exclusão")
+    void deveEnviarEmailComNomeCorretoNaExclusao() {
+        // Arrange
+        Long clienteId = 1L;
+        doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
+        when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
+        doNothing().when(clienteRepository).deleteById(clienteId);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // Act
+        clienteService.deletarCliente(clienteId);
+
+        // Assert
+        verify(emailService, times(1)).enviarEmail(
+                anyString(),
+                anyString(),
+                contains("João Silva")
+        );
+    }
+
+    @Test
     @DisplayName("Deve deletar cliente com sucesso")
     void deveDeletarClienteComSucesso() {
         // Arrange
         Long clienteId = 1L;
         doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
         doNothing().when(clienteRepository).deleteById(clienteId);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
         when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
 
@@ -446,6 +548,7 @@ class ClienteServiceTest {
 
         verify(clienteValidation, times(1)).validarBuscaPorCliente(clienteId);
         verify(clienteRepository, times(1)).deleteById(clienteId);
+        verify(emailService, times(1)).enviarEmail(eq("joao.silva@email.com"), eq("Tchau, até a próxima"), anyString());
     }
 }
 
