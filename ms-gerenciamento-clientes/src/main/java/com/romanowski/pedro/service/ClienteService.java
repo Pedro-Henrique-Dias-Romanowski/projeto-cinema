@@ -26,10 +26,10 @@ public class ClienteService {
 
     private final EmailService emailService;
 
-    @Value("${mensagem.boasvindas.cinema.email}")
+    @Value("${mensagem.boasvindas.cinema.email:}")
     private String mensagemCadastroClienteEmail;
 
-    @Value("${mensagem.exclusao.cinema.email}")
+    @Value("${mensagem.exclusao.cinema.email:}")
     private String mensagemExclusaoClienteEmail;
 
     public ClienteService(ClienteRepository clienteRepository, ClienteValidation clienteValidation, PasswordEncoder passwordEncoder, EmailService emailService) {
@@ -39,6 +39,12 @@ public class ClienteService {
         this.emailService = emailService;
     }
 
+    private String formatarMensagem(String template, String nome, String fallback) {
+        if (template == null || template.isBlank()) {
+            return String.format(fallback, nome);
+        }
+        return String.format(template, nome);
+    }
 
     public Cliente cadastrarCliente(Cliente cliente){
         logger.info("Iniciando cadastro do cliente com email: {}", cliente.getEmail());
@@ -46,7 +52,8 @@ public class ClienteService {
         String senhaCriptografada = passwordEncoder.encode(cliente.getSenha());
         cliente.setSenha(senhaCriptografada);
         var clienteSalvo = clienteRepository.save(cliente);
-        emailService.enviarEmail(cliente.getEmail(), "Bem-vindo ao Cinema", mensagemCadastroClienteEmail + cliente.getNome());
+        var mensagem = formatarMensagem(mensagemCadastroClienteEmail, cliente.getNome(), "Bem-vindo(a), %s!");
+        emailService.enviarEmail(cliente.getEmail(), "Bem-vindo ao Cinema", mensagem);
         return clienteSalvo;
     }
 
@@ -66,6 +73,7 @@ public class ClienteService {
         clienteValidation.validarBuscaPorCliente(id);
         var cliente = clienteRepository.findById(id).get();
         clienteRepository.deleteById(id);
-        emailService.enviarEmail(cliente.getEmail(), "Tchau, até a próxima", mensagemExclusaoClienteEmail + cliente.getNome());
+        var mensagem = formatarMensagem(mensagemExclusaoClienteEmail, cliente.getNome(), "Tchau, %s. Até a próxima!");
+        emailService.enviarEmail(cliente.getEmail(), "Tchau, até a próxima", mensagem);
     }
 }

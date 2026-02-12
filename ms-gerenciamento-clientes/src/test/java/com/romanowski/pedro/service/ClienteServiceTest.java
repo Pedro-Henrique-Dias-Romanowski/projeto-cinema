@@ -97,6 +97,7 @@ class ClienteServiceTest {
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
         when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
         // Act
         clienteService.cadastrarCliente(cliente);
@@ -115,6 +116,7 @@ class ClienteServiceTest {
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
         when(passwordEncoder.encode(senhaOriginal)).thenReturn(senhaCriptografada);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
         // Act
         clienteService.cadastrarCliente(cliente);
