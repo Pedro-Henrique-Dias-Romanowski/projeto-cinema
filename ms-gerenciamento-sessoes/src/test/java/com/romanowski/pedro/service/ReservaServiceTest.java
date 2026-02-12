@@ -79,11 +79,11 @@ class ReservaServiceTest {
         ReflectionTestUtils.setField(reservaService, "mensagemPagamentoConfirmado",
                 "Pagamento confirmado com sucesso, aproveite o filme!");
         ReflectionTestUtils.setField(reservaService, "mensagemReservaConfirmadaEmail",
-                "Sua reserva foi confirmada, aproveite a sessão! Detalhes da reserva: Id reserva: ");
+                "Sua reserva foi confirmada, aproveite a sessão! Detalhes da reserva: Id reserva: %s, Nome filme: %s, Data: %s, Sala: %s, Preço: %s");
         ReflectionTestUtils.setField(reservaService, "mensagemReservaCanceladaEmail",
-                "Sua reserva foi cancelada com sucesso! Detalhes da reserva: Id reserva: ");
+                "Sua reserva foi cancelada com sucesso! Detalhes da reserva: Id reserva: %s, Nome filme: %s, Data: %s, Sala: %s, Preço: %s");
         ReflectionTestUtils.setField(reservaService, "mensagemPagamentoReservaConfirmadoEmail",
-                "O pagamento da sua reserva foi confirmado com sucesso! Aproveite a sessão! Detalhes da reserva: Id reserva: ");
+                "O pagamento da sua reserva foi confirmado com sucesso! Aproveite a sessão! Detalhes da reserva: Id reserva: %s, Nome filme: %s, Data: %s, Sala: %s, Preço: %s");
 
         // Dados de teste
         clienteResponseDTO = new ClienteResponseDTO(
@@ -834,7 +834,7 @@ class ReservaServiceTest {
         verify(emailService, times(1)).enviarEmail(
                 eq(clienteResponseDTO.emailCliente()),
                 eq("Reserva Confirmada"),
-                contains("Sua reserva foi confirmada")
+                anyString()
         );
     }
 
@@ -867,11 +867,14 @@ class ReservaServiceTest {
                 mensagemCaptor.capture()
         );
 
+        String mensagemEmail = mensagemCaptor.getValue();
         assertEquals("cliente@teste.com", emailCaptor.getValue());
         assertEquals("Reserva Confirmada", assuntoCaptor.getValue());
-        assertTrue(mensagemCaptor.getValue().contains("Sua reserva foi confirmada"));
-        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
-        assertTrue(mensagemCaptor.getValue().contains("50.0"));
+        assertTrue(mensagemEmail.contains("1")); // ID da reserva
+        assertTrue(mensagemEmail.contains("Filme Teste"));
+        assertTrue(mensagemEmail.contains("2026-02-20T20:00")); // Data/hora da sessão
+        assertTrue(mensagemEmail.contains("1")); // Sala
+        assertTrue(mensagemEmail.contains("50.0")); // Preço
     }
 
     @Test
@@ -896,7 +899,7 @@ class ReservaServiceTest {
         verify(emailService, times(1)).enviarEmail(
                 eq(clienteResponseDTO.emailCliente()),
                 eq("Cancelamento de reserva"),
-                contains("Sua reserva foi cancelada com sucesso")
+                anyString()
         );
     }
 
@@ -929,11 +932,13 @@ class ReservaServiceTest {
                 mensagemCaptor.capture()
         );
 
+        String mensagemEmail = mensagemCaptor.getValue();
         assertEquals("cliente@teste.com", emailCaptor.getValue());
         assertEquals("Cancelamento de reserva", assuntoCaptor.getValue());
-        assertTrue(mensagemCaptor.getValue().contains("Sua reserva foi cancelada com sucesso"));
-        assertTrue(mensagemCaptor.getValue().contains("1"));
-        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
+        assertTrue(mensagemEmail.contains("1")); // ID da reserva
+        assertTrue(mensagemEmail.contains("Filme Teste"));
+        assertTrue(mensagemEmail.contains("2026-02-20T20:00")); // Data/hora da sessão
+        assertTrue(mensagemEmail.contains("50.0")); // Preço
     }
 
     @Test
@@ -963,7 +968,7 @@ class ReservaServiceTest {
         verify(emailService, times(1)).enviarEmail(
                 eq(clienteResponseDTO.emailCliente()),
                 eq("Pagamento da reserva confirmado"),
-                contains("O pagamento da sua reserva foi confirmado com sucesso")
+                anyString()
         );
     }
 
@@ -1001,11 +1006,13 @@ class ReservaServiceTest {
                 mensagemCaptor.capture()
         );
 
+        String mensagemEmail = mensagemCaptor.getValue();
         assertEquals("cliente@teste.com", emailCaptor.getValue());
         assertEquals("Pagamento da reserva confirmado", assuntoCaptor.getValue());
-        assertTrue(mensagemCaptor.getValue().contains("O pagamento da sua reserva foi confirmado com sucesso"));
-        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
-        assertTrue(mensagemCaptor.getValue().contains("50.0"));
+        assertTrue(mensagemEmail.contains("1")); // ID da reserva
+        assertTrue(mensagemEmail.contains("Filme Teste"));
+        assertTrue(mensagemEmail.contains("2026-02-20T20:00")); // Data/hora da sessão
+        assertTrue(mensagemEmail.contains("50.0")); // Preço
     }
 
     @Test

@@ -47,13 +47,13 @@ public class ReservaService {
     @Value("${mensagem.pagamento.concluido}")
     private String mensagemPagamentoConfirmado;
 
-    @Value("${mensagem.email.reserva.confirmada}")
+    @Value("${mensagem.email.reserva.confirmada:}")
     private String mensagemReservaConfirmadaEmail;
 
-    @Value("${mensagem.email.reserva.cancelada}")
+    @Value("${mensagem.email.reserva.cancelada:}")
     private String mensagemReservaCanceladaEmail;
 
-    @Value("${mensagem.email.pagamento.reserva.concluido}")
+    @Value("${mensagem.email.pagamento.reserva.concluido:}")
     private String mensagemPagamentoReservaConfirmadoEmail;
 
     public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation, EmailService emailService) {
@@ -64,6 +64,10 @@ public class ReservaService {
         this.sessaoService = sessaoService;
         this.reservaValidation = reservaValidation;
         this.emailService = emailService;
+    }
+
+    private String formatarMensagem(String template, Long idReserva, String tituloFilme, String dataHoraSessao, Integer sala, String preco) {
+        return String.format(template, idReserva, tituloFilme, dataHoraSessao, sala, preco);
     }
 
 
@@ -83,8 +87,8 @@ public class ReservaService {
                 .build();
         Reserva reservaSalva = reservaRepository.save(reserva);
         sessaoService.adicionarReservasSessao(reservaSalva);
-        emailService.enviarEmail(cliente.get().emailCliente(), "Reserva Confirmada", mensagemReservaConfirmadaEmail + reservaSalva.getId() + sessao.getTituloFilme() + sessao.getDataHoraSessao() +
-                sessao.getSala() +  sessao.getPreco());
+        var mensagem = formatarMensagem(mensagemReservaConfirmadaEmail, reservaSalva.getId(), sessao.getTituloFilme(), sessao.getDataHoraSessao().toString(), sessao.getSala(), sessao.getPreco().toString());
+        emailService.enviarEmail(cliente.get().emailCliente(), "Reserva Confirmada", mensagem);
         return reservaSalva;
     }
 
@@ -121,8 +125,8 @@ public class ReservaService {
         reserva.setMensagem(mensagemReservaCancelada);
         reservaRepository.save(reserva);
         sessaoService.removerReservasSessao(reserva);
-        emailService.enviarEmail(cliente.get().emailCliente(), "Cancelamento de reserva", mensagemReservaCanceladaEmail + reserva.getId() +reserva.getSessao().getTituloFilme() + reserva.getSessao().getDataHoraSessao() +
-                reserva.getSessao().getSala() +  reserva.getSessao().getPreco());
+        var mensagem = formatarMensagem(mensagemReservaCanceladaEmail, reserva.getId(), reserva.getSessao().getTituloFilme(), reserva.getSessao().getDataHoraSessao().toString(), reserva.getSessao().getSala(), reserva.getSessao().getPreco().toString());
+        emailService.enviarEmail(cliente.get().emailCliente(), "Cancelamento de reserva", mensagem);
     }
 
     @Transactional
@@ -134,7 +138,7 @@ public class ReservaService {
         reserva.setPagamentoConfirmado(true);
         reserva.setMensagem(mensagemPagamentoConfirmado);
         reservaRepository.save(reserva);
-        emailService.enviarEmail(cliente.get().emailCliente(), "Pagamento da reserva confirmado", mensagemPagamentoReservaConfirmadoEmail + reserva.getId() + reserva.getSessao().getTituloFilme() + reserva.getSessao().getDataHoraSessao() +
-                reserva.getSessao().getSala() +  reserva.getSessao().getPreco());
+        var mensagem = formatarMensagem(mensagemPagamentoReservaConfirmadoEmail, reserva.getId(), reserva.getSessao().getTituloFilme(), reserva.getSessao().getDataHoraSessao().toString(), reserva.getSessao().getSala(), reserva.getSessao().getPreco().toString());
+        emailService.enviarEmail(cliente.get().emailCliente(), "Pagamento da reserva confirmado", mensagem);
     }
 }
