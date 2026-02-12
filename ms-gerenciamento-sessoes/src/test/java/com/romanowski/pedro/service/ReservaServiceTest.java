@@ -76,6 +76,14 @@ class ReservaServiceTest {
                 "Reserva cancelada com sucesso.");
         ReflectionTestUtils.setField(reservaService, "mensagemReservaNaoEncontrada",
                 "Reserva não encontrada");
+        ReflectionTestUtils.setField(reservaService, "mensagemPagamentoConfirmado",
+                "Pagamento confirmado com sucesso, aproveite o filme!");
+        ReflectionTestUtils.setField(reservaService, "mensagemReservaConfirmadaEmail",
+                "Sua reserva foi confirmada, aproveite a sessão! Detalhes da reserva: Id reserva: ");
+        ReflectionTestUtils.setField(reservaService, "mensagemReservaCanceladaEmail",
+                "Sua reserva foi cancelada com sucesso! Detalhes da reserva: Id reserva: ");
+        ReflectionTestUtils.setField(reservaService, "mensagemPagamentoReservaConfirmadoEmail",
+                "O pagamento da sua reserva foi confirmado com sucesso! Aproveite a sessão! Detalhes da reserva: Id reserva: ");
 
         // Dados de teste
         clienteResponseDTO = new ClienteResponseDTO(
@@ -118,6 +126,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         Reserva resultado = reservaService.adicionarReserva(idCliente, idSessao);
@@ -137,6 +146,7 @@ class ReservaServiceTest {
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
         verify(reservaRepository, times(1)).save(any(Reserva.class));
         verify(sessaoService, times(1)).adicionarReservasSessao(any(Reserva.class));
+        verify(emailService, times(1)).enviarEmail(any(), any(), any());
     }
 
     @Test
@@ -235,6 +245,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.adicionarReserva(idCliente, idSessao);
@@ -258,6 +269,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.adicionarReserva(idCliente, idSessao);
@@ -286,6 +298,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.adicionarReserva(idCliente1, idSessao);
@@ -311,6 +324,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.adicionarReserva(idCliente, idSessao);
@@ -332,6 +346,7 @@ class ReservaServiceTest {
         doNothing().when(sessaoValidation).validarCliente(any());
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.adicionarReserva(idCliente, idSessao);
@@ -663,6 +678,7 @@ class ReservaServiceTest {
         doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.cancelarReserva(idCliente, idReserva);
@@ -674,6 +690,7 @@ class ReservaServiceTest {
         verify(reservaValidation, times(1)).validarBuscaReserva(idCliente, reserva);
         verify(reservaRepository, times(1)).save(reserva);
         verify(sessaoService, times(1)).removerReservasSessao(reserva);
+        verify(emailService, times(1)).enviarEmail(any(), any(), any());
     }
 
     @Test
@@ -689,6 +706,7 @@ class ReservaServiceTest {
         doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.cancelarReserva(idCliente, idReserva);
@@ -780,6 +798,7 @@ class ReservaServiceTest {
         doNothing().when(reservaValidation).validarBuscaReserva(eq(idCliente), any());
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(invocation -> invocation.getArgument(0));
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
 
         // When
         reservaService.cancelarReserva(idCliente, idReserva1);
@@ -790,5 +809,325 @@ class ReservaServiceTest {
         verify(reservaRepository, times(1)).findById(idReserva2);
         verify(reservaRepository, times(2)).save(any(Reserva.class));
         verify(sessaoService, times(2)).removerReservasSessao(any(Reserva.class));
+    }
+
+
+    @Test
+    @DisplayName("Deve enviar email ao adicionar uma reserva")
+    void deveEnviarEmailAoAdicionarReserva() {
+        // Given
+        Long idCliente = 1L;
+        Long idSessao = 1L;
+
+        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
+        doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.adicionarReserva(idCliente, idSessao);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                eq(clienteResponseDTO.emailCliente()),
+                eq("Reserva Confirmada"),
+                contains("Sua reserva foi confirmada")
+        );
+    }
+
+    @Test
+    @DisplayName("Deve enviar email com os dados corretos da reserva ao adicionar")
+    void deveEnviarEmailComDadosCorretosAoAdicionarReserva() {
+        // Given
+        Long idCliente = 1L;
+        Long idSessao = 1L;
+
+        ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assuntoCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> mensagemCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
+        doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(sessaoService).adicionarReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.adicionarReserva(idCliente, idSessao);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                emailCaptor.capture(),
+                assuntoCaptor.capture(),
+                mensagemCaptor.capture()
+        );
+
+        assertEquals("cliente@teste.com", emailCaptor.getValue());
+        assertEquals("Reserva Confirmada", assuntoCaptor.getValue());
+        assertTrue(mensagemCaptor.getValue().contains("Sua reserva foi confirmada"));
+        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
+        assertTrue(mensagemCaptor.getValue().contains("50.0"));
+    }
+
+    @Test
+    @DisplayName("Deve enviar email ao cancelar uma reserva")
+    void deveEnviarEmailAoCancelarReserva() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.cancelarReserva(idCliente, idReserva);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                eq(clienteResponseDTO.emailCliente()),
+                eq("Cancelamento de reserva"),
+                contains("Sua reserva foi cancelada com sucesso")
+        );
+    }
+
+    @Test
+    @DisplayName("Deve enviar email com os dados corretos da reserva ao cancelar")
+    void deveEnviarEmailComDadosCorretosAoCancelarReserva() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assuntoCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> mensagemCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
+        doNothing().when(sessaoValidation).validarCliente(any());
+        doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.cancelarReserva(idCliente, idReserva);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                emailCaptor.capture(),
+                assuntoCaptor.capture(),
+                mensagemCaptor.capture()
+        );
+
+        assertEquals("cliente@teste.com", emailCaptor.getValue());
+        assertEquals("Cancelamento de reserva", assuntoCaptor.getValue());
+        assertTrue(mensagemCaptor.getValue().contains("Sua reserva foi cancelada com sucesso"));
+        assertTrue(mensagemCaptor.getValue().contains("1"));
+        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
+    }
+
+    @Test
+    @DisplayName("Deve enviar email ao confirmar pagamento")
+    void deveEnviarEmailAoConfirmarPagamento() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        com.romanowski.pedro.entity.StatusPagamento statusPagamento =
+                com.romanowski.pedro.entity.StatusPagamento.builder()
+                .idCliente(idCliente)
+                .idReserva(idReserva)
+                .valor(50.0)
+                .build();
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
+        doNothing().when(reservaValidation).validarPagamentoSessao(statusPagamento);
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.verificarFilaPagamento(statusPagamento);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                eq(clienteResponseDTO.emailCliente()),
+                eq("Pagamento da reserva confirmado"),
+                contains("O pagamento da sua reserva foi confirmado com sucesso")
+        );
+    }
+
+    @Test
+    @DisplayName("Deve enviar email com os dados corretos ao confirmar pagamento")
+    void deveEnviarEmailComDadosCorretosAoConfirmarPagamento() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        com.romanowski.pedro.entity.StatusPagamento statusPagamento =
+                com.romanowski.pedro.entity.StatusPagamento.builder()
+                .idCliente(idCliente)
+                .idReserva(idReserva)
+                .valor(50.0)
+                .build();
+
+        ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assuntoCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> mensagemCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
+        doNothing().when(reservaValidation).validarPagamentoSessao(statusPagamento);
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.verificarFilaPagamento(statusPagamento);
+
+        // Then
+        verify(emailService, times(1)).enviarEmail(
+                emailCaptor.capture(),
+                assuntoCaptor.capture(),
+                mensagemCaptor.capture()
+        );
+
+        assertEquals("cliente@teste.com", emailCaptor.getValue());
+        assertEquals("Pagamento da reserva confirmado", assuntoCaptor.getValue());
+        assertTrue(mensagemCaptor.getValue().contains("O pagamento da sua reserva foi confirmado com sucesso"));
+        assertTrue(mensagemCaptor.getValue().contains("Filme Teste"));
+        assertTrue(mensagemCaptor.getValue().contains("50.0"));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar status da reserva ao confirmar pagamento")
+    void deveAtualizarStatusDaReservaAoConfirmarPagamento() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        com.romanowski.pedro.entity.StatusPagamento statusPagamento =
+                com.romanowski.pedro.entity.StatusPagamento.builder()
+                .idCliente(idCliente)
+                .idReserva(idReserva)
+                .valor(50.0)
+                .build();
+
+        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
+        doNothing().when(reservaValidation).validarPagamentoSessao(statusPagamento);
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+        doNothing().when(emailService).enviarEmail(any(), any(), any());
+
+        // When
+        reservaService.verificarFilaPagamento(statusPagamento);
+
+        // Then
+        assertTrue(reserva.getPagamentoConfirmado());
+        assertEquals("Pagamento confirmado com sucesso, aproveite o filme!", reserva.getMensagem());
+        verify(reservaRepository, times(1)).save(reserva);
+    }
+
+    @Test
+    @DisplayName("Não deve enviar email quando validação de pagamento falhar")
+    void naoDeveEnviarEmailQuandoValidacaoPagamentoFalhar() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 1L;
+
+        com.romanowski.pedro.entity.StatusPagamento statusPagamento =
+                com.romanowski.pedro.entity.StatusPagamento.builder()
+                .idCliente(idCliente)
+                .idReserva(idReserva)
+                .valor(10.0) // Valor inválido
+                .build();
+
+        doThrow(new com.romanowski.pedro.exceptions.ValorPagamentoSessaoInvalido("Valor inválido"))
+                .when(reservaValidation).validarPagamentoSessao(statusPagamento);
+
+        // When & Then
+        assertThrows(com.romanowski.pedro.exceptions.ValorPagamentoSessaoInvalido.class, () -> {
+            reservaService.verificarFilaPagamento(statusPagamento);
+        });
+
+        verify(emailService, never()).enviarEmail(any(), any(), any());
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve enviar email quando reserva não for encontrada ao confirmar pagamento")
+    void naoDeveEnviarEmailQuandoReservaNaoForEncontradaAoConfirmarPagamento() {
+        // Given
+        Long idCliente = 1L;
+        Long idReserva = 999L;
+
+        com.romanowski.pedro.entity.StatusPagamento statusPagamento =
+                com.romanowski.pedro.entity.StatusPagamento.builder()
+                .idCliente(idCliente)
+                .idReserva(idReserva)
+                .valor(50.0)
+                .build();
+
+        doNothing().when(reservaValidation).validarPagamentoSessao(statusPagamento);
+        when(reservaRepository.findById(idReserva)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(com.romanowski.pedro.exceptions.ReservaNaoEncontradaException.class, () -> {
+            reservaService.verificarFilaPagamento(statusPagamento);
+        });
+
+        verify(emailService, never()).enviarEmail(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Não deve enviar email quando cliente não for encontrado ao adicionar reserva")
+    void naoDeveEnviarEmailQuandoClienteNaoForEncontradoAoAdicionar() {
+        // Given
+        Long idCliente = 999L;
+        Long idSessao = 1L;
+
+        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.empty());
+        when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
+        doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
+        doThrow(new com.romanowski.pedro.exceptions.ClienteNaoEncontradoException("Cliente não encontrado"))
+                .when(sessaoValidation).validarCliente(any());
+
+        // When & Then
+        assertThrows(com.romanowski.pedro.exceptions.ClienteNaoEncontradoException.class, () -> {
+            reservaService.adicionarReserva(idCliente, idSessao);
+        });
+
+        verify(emailService, never()).enviarEmail(any(), any(), any());
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve enviar email quando sessão não for encontrada ao adicionar reserva")
+    void naoDeveEnviarEmailQuandoSessaoNaoForEncontradaAoAdicionar() {
+        // Given
+        Long idCliente = 1L;
+        Long idSessao = 999L;
+
+        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
+        doThrow(new com.romanowski.pedro.exceptions.SessaoNaoEcontradaException("Sessao não encontrada"))
+                .when(reservaValidation).validarSessao(any(Sessao.class));
+
+        // When & Then
+        assertThrows(com.romanowski.pedro.exceptions.SessaoNaoEcontradaException.class, () -> {
+            reservaService.adicionarReserva(idCliente, idSessao);
+        });
+
+        verify(emailService, never()).enviarEmail(any(), any(), any());
+        verify(reservaRepository, never()).save(any());
     }
 }
