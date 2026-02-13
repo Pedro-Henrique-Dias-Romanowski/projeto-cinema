@@ -1,40 +1,81 @@
 package com.romanowski.pedro.service;
 
-import com.romanowski.pedro.dto.response.ClienteResponseDTO;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.romanowski.pedro.entity.AdministradorEntity;
 import com.romanowski.pedro.entity.ClienteEntity;
-import com.romanowski.pedro.feign.ClienteFeignClient;
+import com.romanowski.pedro.enums.Perfil;
 import com.romanowski.pedro.repository.AdministradorRepository;
+import com.romanowski.pedro.repository.ClienteRepository;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 @Service
 public class LoginService implements UserDetailsService {
 
+    @Value("${spring.security.jwt.secret}")
+    private String JWT_SECRET;
+
     private final AdministradorRepository administradorRepository;
-    private final ClienteFeignClient clienteFeignClient;
+    private final ClienteRepository clienteRepository;
     private Logger logger = LoggerFactory.getLogger(TokenService.class);
 
-    public LoginService(AdministradorRepository administradorRepository, ClienteFeignClient clienteFeignClient) {
+    public LoginService(AdministradorRepository administradorRepository, ClienteRepository clienteRepository) {
         this.administradorRepository = administradorRepository;
-        this.clienteFeignClient = clienteFeignClient;
+        this.clienteRepository = clienteRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         logger.info("Procurando dados do login do usuário: {}", username);
-        ClienteResponseDTO clienteResponseDTO = clienteFeignClient.obterClientePorId(Long.valueOf(username)).get();
-        // todo continuar implementação do login, verificar se é cliente ou administrador
-        return null;
+        return clienteRepository.findByEmailIgnoreCase(username)
+                .map(user -> (UserDetails) user)
+                .or(() -> administradorRepository.findByEmailIgnoreCase(username)
+                        .map(user -> (UserDetails) user))
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario nao encontrado"));
     }
 
-    public String gerarTokenCliente(ClienteEntity cliente) {
-        // todo implementar geração de token JWT para cliente
-        return null;
-    };
+    public String gerarTokenCliente(ClienteEntity cliente){
+        try{
+            Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
+            return JWT.create()
+                    .withIssuer("Cinecom")
+                    .withSubject(cliente.getEmail())
+                    .withExpiresAt(dataExpiracaoToken())
+                    .withClaim("ROLE", Perfil.CLIENTE.toString())
+                    .sign(algorithm);
+        } catch(JWTCreationException e){
+            throw new RuntimeException("Erro ao gerar token JWT", e);
+        }
+    }
+
+    public String gerarTokenAdministrador(AdministradorEntity administrador){
+        try{
+            Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
+            return JWT.create()
+                    .withIssuer("Cinecom")
+                    .withSubject(administrador.getEmail())
+                    .withExpiresAt(dataExpiracaoToken())
+                    .withClaim("ROLE", Perfil.ADMIN.toString())
+                    .sign(algorithm);
+        } catch(JWTCreationException e){
+            throw new RuntimeException("Erro ao gerar token JWT", e);
+        }
+    }
+
+    private Instant dataExpiracaoToken(){
+        return LocalDateTime.now().plusMinutes(30).toInstant(ZoneOffset.of("-03:00"));
+    }
 
 }
