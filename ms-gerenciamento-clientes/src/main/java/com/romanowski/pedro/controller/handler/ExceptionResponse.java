@@ -1,4 +1,4 @@
-package com.romanowski.pedro.controller.exceptions;
+package com.romanowski.pedro.controller.handler;
 
 import java.util.Date;
 
