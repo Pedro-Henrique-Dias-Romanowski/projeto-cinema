@@ -36,7 +36,6 @@ public class ClienteValidation {
 
     public void validarCadastroCliente(Cliente cliente){
         validarExistenciaEmail(cliente.getEmail());
-        validarSenhaCliente(cliente.getSenha());
     }
 
     public void validarListagemClientes(){
@@ -58,13 +57,6 @@ public class ClienteValidation {
         if (clienteRepository.existsByEmail(email)){
             logger.info("Cliente com email {} encontrado", email);
             throw new EmailExistenteException(mensagemEmailExistente);
-        }
-    }
-
-    private void validarSenhaCliente(String senha){
-        if (senha.length() <= 5 || senha.length() > 15){
-            logger.error("Senha inválida");
-            throw new SenhaInvalidaExcpetion(mensagemSenhaInvalida);
         }
     }
 }
