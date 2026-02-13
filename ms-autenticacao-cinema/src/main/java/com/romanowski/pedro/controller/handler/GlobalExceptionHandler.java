@@ -1,5 +1,6 @@
 package com.romanowski.pedro.controller.handler;
 
+import com.romanowski.pedro.exceptions.SecurityException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
