@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class LoginService implements UserDetailsService {
@@ -47,15 +49,19 @@ public class LoginService implements UserDetailsService {
     }
 
     public String gerarTokenCliente(ClienteEntity cliente){
-        try{
+        try {
             Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
+
             return JWT.create()
-                    .withIssuer("Cinecom")
-                    .withSubject(cliente.getEmail())
+                    .withIssuer("cinecom-auth")
+                    .withSubject(cliente.getId().toString())
+                    .withClaim("email", cliente.getEmail())
+                    .withClaim("roles", List.of("CLIENTE"))
+                    .withIssuedAt(new Date())
                     .withExpiresAt(dataExpiracaoToken())
-                    .withClaim("ROLE", Perfil.CLIENTE.toString())
                     .sign(algorithm);
-        } catch(JWTCreationException e){
+
+        } catch (JWTCreationException e){
             throw new RuntimeException("Erro ao gerar token JWT", e);
         }
     }
@@ -64,10 +70,12 @@ public class LoginService implements UserDetailsService {
         try{
             Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
             return JWT.create()
-                    .withIssuer("Cinecom")
-                    .withSubject(administrador.getEmail())
+                    .withIssuer("cinecom-auth")
+                    .withSubject(administrador.getId().toString())
+                    .withClaim("email", administrador.getEmail())
+                    .withClaim("roles", List.of("ADMIN"))
+                    .withIssuedAt(new Date())
                     .withExpiresAt(dataExpiracaoToken())
-                    .withClaim("ROLE", Perfil.ADMIN.toString())
                     .sign(algorithm);
         } catch(JWTCreationException e){
             throw new RuntimeException("Erro ao gerar token JWT", e);
