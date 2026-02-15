@@ -16,6 +16,12 @@ spring:
       hibernate:
     show-sql: false
     open-in-view: false
+  spring:
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            secret-key: ${JWT_SECRET:123456789}
 springdoc:
   api-docs:
     path: /book-service/v3/api-docs
