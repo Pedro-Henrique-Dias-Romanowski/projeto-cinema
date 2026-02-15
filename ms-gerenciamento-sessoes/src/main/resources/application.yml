@@ -39,7 +39,7 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
     username: ${MAIL_USER:pedro.romanowski02@gmail.com}
-    password: ${MAIL_PASSWORD}
+    password: ${MAIL_PASSWORD:vfvfrjgeoogkvigb}
     protocol: smtp
     properties:
       mail:
@@ -50,6 +50,12 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+  spring:
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            secret-key: ${JWT_SECRET:123456789}
 springdoc:
   api-docs:
     path: /book-service/v3/api-docs
