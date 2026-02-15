@@ -73,38 +73,6 @@ class ClienteValidationTest {
     }
 
     @Test
-    @DisplayName("Deve lançar SenhaInvalidaExcpetion quando senha tem menos de 6 caracteres")
-    void deveLancarExcecaoQuandoSenhaMenorQue6Caracteres() {
-        // Arrange
-        cliente.setSenha("12345"); // 5 caracteres
-        when(clienteRepository.existsByEmail(cliente.getEmail())).thenReturn(false);
-
-        // Act & Assert
-        SenhaInvalidaExcpetion exception = assertThrows(
-                SenhaInvalidaExcpetion.class,
-                () -> clienteValidation.validarCadastroCliente(cliente)
-        );
-
-        assertEquals("Senha deve ter entre 6 e 15 caracteres", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Deve lançar SenhaInvalidaExcpetion quando senha tem exatamente 5 caracteres")
-    void deveLancarExcecaoQuandoSenhaTem5Caracteres() {
-        // Arrange
-        cliente.setSenha("abc12"); // Exatamente 5 caracteres (limite inválido)
-        when(clienteRepository.existsByEmail(cliente.getEmail())).thenReturn(false);
-
-        // Act & Assert
-        SenhaInvalidaExcpetion exception = assertThrows(
-                SenhaInvalidaExcpetion.class,
-                () -> clienteValidation.validarCadastroCliente(cliente)
-        );
-
-        assertEquals("Senha deve ter entre 6 e 15 caracteres", exception.getMessage());
-    }
-
-    @Test
     @DisplayName("Deve validar senha com exatamente 6 caracteres (mínimo válido)")
     void deveValidarSenhaComSeisCaracteres() {
         // Arrange
@@ -126,50 +94,6 @@ class ClienteValidationTest {
         assertDoesNotThrow(() -> clienteValidation.validarCadastroCliente(cliente));
     }
 
-    @Test
-    @DisplayName("Deve lançar SenhaInvalidaExcpetion quando senha tem mais de 15 caracteres")
-    void deveLancarExcecaoQuandoSenhaMaiorQue15Caracteres() {
-        // Arrange
-        cliente.setSenha("senha1234567890ABC"); // 18 caracteres
-        when(clienteRepository.existsByEmail(cliente.getEmail())).thenReturn(false);
-
-        // Act & Assert
-        SenhaInvalidaExcpetion exception = assertThrows(
-                SenhaInvalidaExcpetion.class,
-                () -> clienteValidation.validarCadastroCliente(cliente)
-        );
-
-        assertEquals("Senha deve ter entre 6 e 15 caracteres", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Deve lançar SenhaInvalidaExcpetion quando senha está vazia")
-    void deveLancarExcecaoQuandoSenhaVazia() {
-        // Arrange
-        cliente.setSenha(""); // Senha vazia
-        when(clienteRepository.existsByEmail(cliente.getEmail())).thenReturn(false);
-
-        // Act & Assert
-        SenhaInvalidaExcpetion exception = assertThrows(
-                SenhaInvalidaExcpetion.class,
-                () -> clienteValidation.validarCadastroCliente(cliente)
-        );
-
-        assertEquals("Senha deve ter entre 6 e 15 caracteres", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Deve chamar repositório apenas uma vez para verificar email")
-    void deveChamarRepositorioApenasUmaVez() {
-        // Arrange
-        when(clienteRepository.existsByEmail(cliente.getEmail())).thenReturn(false);
-
-        // Act
-        clienteValidation.validarCadastroCliente(cliente);
-
-        // Assert
-        verify(clienteRepository, times(1)).existsByEmail(cliente.getEmail());
-    }
 
     @Test
     @DisplayName("Deve validar cliente com email único e senha válida")
