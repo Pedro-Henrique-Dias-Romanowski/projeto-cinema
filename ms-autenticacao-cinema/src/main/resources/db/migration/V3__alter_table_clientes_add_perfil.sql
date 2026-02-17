@@ -1,0 +1,2 @@
+ALTER TABLE clientes ADD COLUMN perfil VARCHAR(50) NOT NULL;
+
