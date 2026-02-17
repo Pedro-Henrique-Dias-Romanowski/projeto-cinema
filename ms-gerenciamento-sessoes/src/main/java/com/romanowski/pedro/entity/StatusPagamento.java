@@ -2,6 +2,8 @@ package com.romanowski.pedro.entity;
 
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -9,7 +11,7 @@ import lombok.*;
 @Builder
 public class StatusPagamento {
 
-    private Long idCliente;
+    private UUID idCliente;
     private Long idReserva;
     private Double valor;
     private String mensagem;

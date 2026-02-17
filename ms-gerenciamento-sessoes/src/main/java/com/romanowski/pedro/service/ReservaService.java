@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ReservaService {
@@ -72,7 +73,7 @@ public class ReservaService {
 
 
     @Transactional
-    public Reserva adicionarReserva(Long idCliente, Long idSessao){
+    public Reserva adicionarReserva(UUID idCliente, Long idSessao){
         logger.info("Adicionando reserva para o cliente de ID: {} na sessão de ID: {}", idCliente, idSessao);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Sessao sessao = sessaoRepository.findById(idSessao).get();
@@ -93,7 +94,7 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
-    public List<Reserva> listarReservas(Long idCliente){
+    public List<Reserva> listarReservas(UUID idCliente){
         logger.info("Listando reservas para o cliente de ID: {}", idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         sessaoValidation.validarCliente(cliente);
@@ -103,7 +104,7 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Reserva> buscarReservaPorId(Long idCliente, Long idReserva){
+    public Optional<Reserva> buscarReservaPorId(UUID idCliente, Long idReserva){
         logger.info("Buscando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Reserva reserva = reservaRepository.findById(idReserva)
@@ -114,7 +115,7 @@ public class ReservaService {
     }
 
     @Transactional
-    public void cancelarReserva(Long idCliente, Long idReserva){
+    public void cancelarReserva(UUID idCliente, Long idReserva){
         logger.info("Cancelando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
         Reserva reserva = reservaRepository.findById(idReserva)

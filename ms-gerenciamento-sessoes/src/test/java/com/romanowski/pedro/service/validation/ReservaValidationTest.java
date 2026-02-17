@@ -19,6 +19,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -39,6 +40,7 @@ class ReservaValidationTest {
 
     private Sessao sessao;
     private Reserva reserva;
+    private UUID testClienteId;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +48,8 @@ class ReservaValidationTest {
         ReflectionTestUtils.setField(reservaValidation, "mensagemSessaoNaoEncontrada", "Sessao não encontrada");
         ReflectionTestUtils.setField(reservaValidation, "mensagemListaReservasVazia", "Lista de reservas vazia");
         ReflectionTestUtils.setField(reservaValidation, "mensagemReservaNaoEncontrada", "Reserva não encontrada");
+
+        testClienteId = UUID.randomUUID();
 
         // Dados de teste
         sessao = Sessao.builder()
@@ -60,7 +64,7 @@ class ReservaValidationTest {
 
         reserva = Reserva.builder()
                 .id(1L)
-                .idCliente(1L)
+                .idCliente(testClienteId)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -187,7 +191,6 @@ class ReservaValidationTest {
                 () -> reservaValidation.validarSessao(sessaoComAtivaNulo));
     }
 
-    // ================= TESTES PARA VALIDAR LISTAGEM DE RESERVAS =================
 
     @Test
     @DisplayName("Deve validar lista de reservas com sucesso quando lista contém elementos")
@@ -220,7 +223,7 @@ class ReservaValidationTest {
         // Given
         Reserva reserva2 = Reserva.builder()
                 .id(2L)
-                .idCliente(1L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(true)
                 .ativa(true)
@@ -229,7 +232,7 @@ class ReservaValidationTest {
 
         Reserva reserva3 = Reserva.builder()
                 .id(3L)
-                .idCliente(1L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -249,7 +252,7 @@ class ReservaValidationTest {
         // Given
         Reserva reservaInativa = Reserva.builder()
                 .id(2L)
-                .idCliente(1L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(false)
@@ -268,7 +271,7 @@ class ReservaValidationTest {
         // Given
         Reserva reservaCliente2 = Reserva.builder()
                 .id(2L)
-                .idCliente(2L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -297,18 +300,14 @@ class ReservaValidationTest {
         assertEquals("Lista de reservas vazia", exception.getMessage());
     }
 
-    // ================= TESTES PARA VALIDAR CANCELAMENTO DE RESERVA =================
-
     @Test
     @DisplayName("Deve validar cancelamento de reserva com sucesso")
     void deveValidarCancelamentoDeReservaComSucesso() {
         // Given
-        Long idCliente = 1L;
-
         when(reservaRepository.existsById(reserva.getId())).thenReturn(true);
 
         // When & Then
-        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(idCliente, reserva));
+        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(testClienteId, reserva));
 
         verify(reservaRepository, times(1)).existsById(reserva.getId());
     }
@@ -317,14 +316,12 @@ class ReservaValidationTest {
     @DisplayName("Deve lançar exceção quando reserva não existe")
     void deveLancarExcecaoQuandoReservaNaoExiste() {
         // Given
-        Long idCliente = 1L;
-
         when(reservaRepository.existsById(reserva.getId())).thenReturn(false);
 
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarBuscaReserva(idCliente, reserva)
+                () -> reservaValidation.validarBuscaReserva(testClienteId, reserva)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -335,8 +332,7 @@ class ReservaValidationTest {
     @DisplayName("Deve lançar exceção quando reserva não pertence ao cliente")
     void deveLancarExcecaoQuandoReservaNaoPertenceAoCliente() {
         // Given
-        Long idCliente = 1L;
-        Long idClienteDiferente = 2L;
+        UUID idClienteDiferente = UUID.randomUUID();
 
         Reserva reservaOutroCliente = Reserva.builder()
                 .id(1L)
@@ -352,7 +348,7 @@ class ReservaValidationTest {
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarBuscaReserva(idCliente, reservaOutroCliente)
+                () -> reservaValidation.validarBuscaReserva(testClienteId, reservaOutroCliente)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -363,8 +359,7 @@ class ReservaValidationTest {
     @DisplayName("Deve lançar exceção quando reserva não existe e não pertence ao cliente")
     void deveLancarExcecaoQuandoReservaNaoExisteENaoPertenceAoCliente() {
         // Given
-        Long idCliente = 1L;
-        Long idClienteDiferente = 2L;
+        UUID idClienteDiferente = UUID.randomUUID();
 
         Reserva reservaInvalida = Reserva.builder()
                 .id(999L)
@@ -380,7 +375,7 @@ class ReservaValidationTest {
         // When & Then
         ReservaNaoEncontradaException exception = assertThrows(
                 ReservaNaoEncontradaException.class,
-                () -> reservaValidation.validarBuscaReserva(idCliente, reservaInvalida)
+                () -> reservaValidation.validarBuscaReserva(testClienteId, reservaInvalida)
         );
 
         assertEquals("Reserva não encontrada", exception.getMessage());
@@ -391,11 +386,9 @@ class ReservaValidationTest {
     @DisplayName("Deve validar cancelamento para cliente correto")
     void deveValidarCancelamentoParaClienteCorreto() {
         // Given
-        Long idCliente = 1L;
-
         Reserva reservaCliente1 = Reserva.builder()
                 .id(1L)
-                .idCliente(idCliente)
+                .idCliente(testClienteId)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -405,7 +398,7 @@ class ReservaValidationTest {
         when(reservaRepository.existsById(reservaCliente1.getId())).thenReturn(true);
 
         // When & Then
-        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(idCliente, reservaCliente1));
+        assertDoesNotThrow(() -> reservaValidation.validarBuscaReserva(testClienteId, reservaCliente1));
 
         verify(reservaRepository, times(1)).existsById(reservaCliente1.getId());
     }

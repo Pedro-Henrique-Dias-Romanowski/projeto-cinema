@@ -10,12 +10,14 @@ import com.romanowski.pedro.exceptions.ValorPagamentoSessaoInvalido;
 import com.romanowski.pedro.repository.ReservaRepository;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.SessaoService;
+import org.apache.commons.text.translate.UnicodeUnescaper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class ReservaValidation {
@@ -63,7 +65,7 @@ public class ReservaValidation {
         }
     }
 
-    public void validarBuscaReserva(Long idCliente, Reserva reserva){
+    public void validarBuscaReserva(UUID idCliente, Reserva reserva){
         if (!reservaRepository.existsById(reserva.getId()) || !reserva.getIdCliente().equals(idCliente)){
             logger.error("Nenhuma reserva encontrada para o cliente com ID: {}", idCliente);
             throw new ReservaNaoEncontradaException(mensagemReservaNaoEncontrada);

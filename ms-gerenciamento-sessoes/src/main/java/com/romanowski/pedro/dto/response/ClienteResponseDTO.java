@@ -2,9 +2,11 @@ package com.romanowski.pedro.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.UUID;
+
 public record ClienteResponseDTO(
         @JsonProperty("id")
-        Long idCliente,
+        UUID idCliente,
         @JsonProperty("nome")
         String nomeCliente,
         @JsonProperty("email")

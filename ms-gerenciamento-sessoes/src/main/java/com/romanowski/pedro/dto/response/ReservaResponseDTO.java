@@ -1,8 +1,10 @@
 package com.romanowski.pedro.dto.response;
 
+import java.util.UUID;
+
 public record ReservaResponseDTO(
         Long id,
-        Long idCliente,
+        UUID idCliente,
         Long idSessao,
         Boolean pagamentoConfirmado,
         Boolean ativa,

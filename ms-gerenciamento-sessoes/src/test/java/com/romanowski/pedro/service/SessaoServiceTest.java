@@ -23,10 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -331,7 +328,7 @@ class SessaoServiceTest {
         // Given
         Reserva reserva = Reserva.builder()
                 .id(1L)
-                .idCliente(1L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -357,7 +354,7 @@ class SessaoServiceTest {
         // Given
         Reserva reserva1 = Reserva.builder()
                 .id(1L)
-                .idCliente(1L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -365,7 +362,7 @@ class SessaoServiceTest {
 
         Reserva reserva2 = Reserva.builder()
                 .id(2L)
-                .idCliente(2L)
+                .idCliente(UUID.randomUUID())
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)

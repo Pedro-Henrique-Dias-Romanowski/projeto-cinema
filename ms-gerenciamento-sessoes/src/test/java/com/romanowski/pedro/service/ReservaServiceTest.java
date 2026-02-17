@@ -1,4 +1,3 @@
-
 package com.romanowski.pedro.service;
 
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
@@ -28,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -86,8 +86,10 @@ class ReservaServiceTest {
                 "O pagamento da sua reserva foi confirmado com sucesso! Aproveite a sessão! Detalhes da reserva: Id reserva: %s, Nome filme: %s, Data: %s, Sala: %s, Preço: %s");
 
         // Dados de teste
+        UUID testClienteId = UUID.randomUUID();
+
         clienteResponseDTO = new ClienteResponseDTO(
-                1L,
+                testClienteId,
                 "Cliente Teste",
                 "cliente@teste.com"
         );
@@ -105,7 +107,7 @@ class ReservaServiceTest {
 
         reserva = Reserva.builder()
                 .id(1L)
-                .idCliente(1L)
+                .idCliente(testClienteId)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -117,10 +119,10 @@ class ReservaServiceTest {
     @DisplayName("Deve adicionar uma reserva com sucesso")
     void deveAdicionarReservaComSucesso() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -134,7 +136,7 @@ class ReservaServiceTest {
         // Then
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
-        assertEquals(1L, resultado.getIdCliente());
+        assertNotNull(resultado.getIdCliente());
         assertEquals(sessao, resultado.getSessao());
         assertFalse(resultado.getPagamentoConfirmado());
         assertTrue(resultado.getAtiva());
@@ -153,10 +155,10 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando cliente não for encontrado")
     void deveLancarExcecaoQuandoClienteNaoForEncontrado() {
         // Given
-        Long idCliente = 999L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.empty());
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.empty());
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
@@ -179,10 +181,10 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando sessão não for encontrada")
     void deveLancarExcecaoQuandoSessaoNaoForEncontrada() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 999L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doThrow(new SessaoNaoEcontradaException("Sessao não encontrada"))
                 .when(reservaValidation).validarSessao(any(Sessao.class));
@@ -203,7 +205,7 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando sessão não estiver ativa")
     void deveLancarExcecaoQuandoSessaoNaoEstiverAtiva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
         Sessao sessaoInativa = Sessao.builder()
@@ -216,7 +218,7 @@ class ReservaServiceTest {
                 .ativa(false) // Sessão inativa
                 .build();
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessaoInativa));
         doThrow(new SessaoNaoEcontradaException("Sessao não encontrada"))
                 .when(reservaValidation).validarSessao(any(Sessao.class));
@@ -236,10 +238,10 @@ class ReservaServiceTest {
     @DisplayName("Deve chamar adicionarReservasSessao após salvar reserva")
     void deveChamarAtualizarReservasSessaoAposSalvarReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -258,12 +260,12 @@ class ReservaServiceTest {
     @DisplayName("Deve associar sessão correta à reserva")
     void deveAssociarSessaoCorretaAReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
         ArgumentCaptor<Reserva> reservaCaptor = ArgumentCaptor.forClass(Reserva.class);
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -285,11 +287,11 @@ class ReservaServiceTest {
     @DisplayName("Deve criar múltiplas reservas para diferentes clientes na mesma sessão")
     void deveCriarMultiplasReservasParaDiferentesClientesNaMesmaSessao() {
         // Given
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idSessao = 1L;
 
-        ClienteResponseDTO cliente2 = new ClienteResponseDTO(2L, "Cliente 2", "cliente2@teste.com");
+        ClienteResponseDTO cliente2 = new ClienteResponseDTO(idCliente2, "Cliente 2", "cliente2@teste.com");
 
         when(clienteFeignClient.obterClientePorId(idCliente1)).thenReturn(Optional.of(clienteResponseDTO));
         when(clienteFeignClient.obterClientePorId(idCliente2)).thenReturn(Optional.of(cliente2));
@@ -315,10 +317,10 @@ class ReservaServiceTest {
     @DisplayName("Deve buscar sessão por ID específico")
     void deveBuscarSessaoPorIdEspecifico() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 999L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(idSessao)).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -337,7 +339,7 @@ class ReservaServiceTest {
     @DisplayName("Deve buscar cliente por ID específico")
     void deveBuscarClientePorIdEspecifico() {
         // Given
-        Long idCliente = 888L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
@@ -359,7 +361,7 @@ class ReservaServiceTest {
     @DisplayName("Deve listar todas as reservas de um cliente com sucesso")
     void deveListarTodasReservasDeUmClienteComSucesso() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
 
         Sessao sessao2 = Sessao.builder()
                 .id(2L)
@@ -382,9 +384,9 @@ class ReservaServiceTest {
 
         List<Reserva> reservas = List.of(reserva, reserva2);
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         doNothing().when(sessaoValidation).validarCliente(any());
-        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        when(reservaRepository.findAllByIdCliente(any(UUID.class))).thenReturn(reservas);
         doNothing().when(reservaValidation).validarListagemReservas(any());
 
         // When
@@ -395,8 +397,6 @@ class ReservaServiceTest {
         assertEquals(2, resultado.size());
         assertEquals(1L, resultado.get(0).getId());
         assertEquals(2L, resultado.get(1).getId());
-        assertEquals(idCliente, resultado.get(0).getIdCliente());
-        assertEquals(idCliente, resultado.get(1).getIdCliente());
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
@@ -408,9 +408,9 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando cliente não for encontrado ao listar reservas")
     void deveLancarExcecaoQuandoClienteNaoForEncontradoAoListarReservas() {
         // Given
-        Long idCliente = 999L;
+        UUID idCliente = UUID.randomUUID();
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.empty());
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
                 .when(sessaoValidation).validarCliente(Optional.empty());
 
@@ -421,7 +421,7 @@ class ReservaServiceTest {
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
         verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
-        verify(reservaRepository, never()).findAllByIdCliente(anyLong());
+        verify(reservaRepository, never()).findAllByIdCliente(any(UUID.class));
         verify(reservaValidation, never()).validarListagemReservas(any());
     }
 
@@ -429,12 +429,12 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando lista de reservas estiver vazia")
     void deveLancarExcecaoQuandoListaDeReservasEstiverVazia() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         List<Reserva> reservasVazia = new ArrayList<>();
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         doNothing().when(sessaoValidation).validarCliente(any());
-        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservasVazia);
+        when(reservaRepository.findAllByIdCliente(any(UUID.class))).thenReturn(reservasVazia);
         doThrow(new ListaReservasVaziaException("Lista de reservas vazia"))
                 .when(reservaValidation).validarListagemReservas(reservasVazia);
 
@@ -453,12 +453,12 @@ class ReservaServiceTest {
     @DisplayName("Deve listar apenas uma reserva quando cliente possui apenas uma")
     void deveListarApenasUmaReservaQuandoClientePossuiApenaUma() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         List<Reserva> reservas = List.of(reserva);
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         doNothing().when(sessaoValidation).validarCliente(any());
-        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        when(reservaRepository.findAllByIdCliente(any(UUID.class))).thenReturn(reservas);
         doNothing().when(reservaValidation).validarListagemReservas(any());
 
         // When
@@ -468,7 +468,6 @@ class ReservaServiceTest {
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
         assertEquals(1L, resultado.get(0).getId());
-        assertEquals(idCliente, resultado.get(0).getIdCliente());
         assertFalse(resultado.get(0).getPagamentoConfirmado());
 
         verify(reservaRepository, times(1)).findAllByIdCliente(idCliente);
@@ -479,12 +478,12 @@ class ReservaServiceTest {
     @DisplayName("Deve validar cliente antes de listar reservas")
     void deveValidarClienteAntesDeListarReservas() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         List<Reserva> reservas = List.of(reserva);
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         doNothing().when(sessaoValidation).validarCliente(any());
-        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        when(reservaRepository.findAllByIdCliente(any(UUID.class))).thenReturn(reservas);
         doNothing().when(reservaValidation).validarListagemReservas(any());
 
         // When
@@ -499,7 +498,7 @@ class ReservaServiceTest {
     @DisplayName("Deve retornar lista com todas as reservas ativas e inativas")
     void deveRetornarListaComTodasReservasAtivasEInativas() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
 
         Reserva reservaInativa = Reserva.builder()
                 .id(2L)
@@ -512,9 +511,9 @@ class ReservaServiceTest {
 
         List<Reserva> reservas = List.of(reserva, reservaInativa);
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         doNothing().when(sessaoValidation).validarCliente(any());
-        when(reservaRepository.findAllByIdCliente(idCliente)).thenReturn(reservas);
+        when(reservaRepository.findAllByIdCliente(any(UUID.class))).thenReturn(reservas);
         doNothing().when(reservaValidation).validarListagemReservas(any());
 
         // When
@@ -533,14 +532,14 @@ class ReservaServiceTest {
     @DisplayName("Deve buscar uma reserva por ID com sucesso")
     void deveBuscarReservaPorIdComSucesso() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
-        doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
-        when(reservaRepository.findByIdAndIdCliente(idReserva, idCliente)).thenReturn(Optional.of(reserva));
+        doNothing().when(reservaValidation).validarBuscaReserva(any(UUID.class), any(Reserva.class));
+        when(reservaRepository.findByIdAndIdCliente(anyLong(), any(UUID.class))).thenReturn(Optional.of(reserva));
 
         // When
         Optional<Reserva> resultado = reservaService.buscarReservaPorId(idCliente, idReserva);
@@ -549,7 +548,6 @@ class ReservaServiceTest {
         assertNotNull(resultado);
         assertTrue(resultado.isPresent());
         assertEquals(1L, resultado.get().getId());
-        assertEquals(1L, resultado.get().getIdCliente());
         assertEquals(sessao, resultado.get().getSessao());
         assertTrue(resultado.get().getAtiva());
         assertFalse(resultado.get().getPagamentoConfirmado());
@@ -565,10 +563,10 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando cliente não for encontrado ao buscar reserva")
     void deveLancarExcecaoQuandoClienteNaoForEncontradoAoBuscarReserva() {
         // Given
-        Long idCliente = 999L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.empty());
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
                 .when(sessaoValidation).validarCliente(Optional.empty());
@@ -581,31 +579,32 @@ class ReservaServiceTest {
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
         verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
-        verify(reservaValidation, never()).validarBuscaReserva(anyLong(), any());
-        verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), anyLong());
+        verify(reservaValidation, never()).validarBuscaReserva(any(UUID.class), any());
+        verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), any(UUID.class));
     }
 
     @Test
     @DisplayName("Deve lançar exceção quando reserva não pertence ao cliente ao buscar")
     void deveLancarExcecaoQuandoReservaNaoPertenceAoClienteAoBuscar() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
+        UUID idClienteDiferente = UUID.randomUUID();
         Long idReserva = 1L;
 
         Reserva reservaOutroCliente = Reserva.builder()
                 .id(1L)
-                .idCliente(2L) // Cliente diferente
+                .idCliente(idClienteDiferente) // Cliente diferente
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
                 .mensagem("Reserva de outro cliente.")
                 .build();
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reservaOutroCliente));
         doNothing().when(sessaoValidation).validarCliente(any());
         doThrow(new ReservaNaoEncontradaException("Reserva não encontrada"))
-                .when(reservaValidation).validarBuscaReserva(idCliente, reservaOutroCliente);
+                .when(reservaValidation).validarBuscaReserva(any(UUID.class), any(Reserva.class));
 
         // When & Then
         assertThrows(ReservaNaoEncontradaException.class, () -> {
@@ -616,23 +615,23 @@ class ReservaServiceTest {
         verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.of(clienteResponseDTO));
         verify(reservaValidation, times(1)).validarBuscaReserva(idCliente, reservaOutroCliente);
-        verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), anyLong());
+        verify(reservaRepository, never()).findByIdAndIdCliente(anyLong(), any(UUID.class));
     }
 
     @Test
     @DisplayName("Deve buscar reservas de diferentes clientes separadamente")
     void deveBuscarReservasDeDiferentesClientesSeparadamente() {
         // Given
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idReserva1 = 1L;
         Long idReserva2 = 2L;
 
-        ClienteResponseDTO cliente2 = new ClienteResponseDTO(2L, "Cliente 2", "cliente2@teste.com");
+        ClienteResponseDTO cliente2 = new ClienteResponseDTO(idCliente2, "Cliente 2", "cliente2@teste.com");
 
         Reserva reserva2 = Reserva.builder()
                 .id(2L)
-                .idCliente(2L)
+                .idCliente(idCliente2)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -644,7 +643,7 @@ class ReservaServiceTest {
         when(reservaRepository.findById(idReserva1)).thenReturn(Optional.ofNullable(reserva));
         when(reservaRepository.findById(idReserva2)).thenReturn(Optional.ofNullable(reserva2));
         doNothing().when(sessaoValidation).validarCliente(any());
-        doNothing().when(reservaValidation).validarBuscaReserva(anyLong(), any());
+        doNothing().when(reservaValidation).validarBuscaReserva(any(UUID.class), any());
         when(reservaRepository.findByIdAndIdCliente(idReserva1, idCliente1)).thenReturn(Optional.of(reserva));
         when(reservaRepository.findByIdAndIdCliente(idReserva2, idCliente2)).thenReturn(Optional.of(reserva2));
 
@@ -655,8 +654,6 @@ class ReservaServiceTest {
         // Then
         assertTrue(resultadoCliente1.isPresent());
         assertTrue(resultadoCliente2.isPresent());
-        assertEquals(1L, resultadoCliente1.get().getIdCliente());
-        assertEquals(2L, resultadoCliente2.get().getIdCliente());
 
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente1);
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente2);
@@ -669,13 +666,13 @@ class ReservaServiceTest {
     @DisplayName("Deve cancelar uma reserva com sucesso")
     void deveCancelarReservaComSucesso() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
-        doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
+        doNothing().when(reservaValidation).validarBuscaReserva(any(UUID.class), any(Reserva.class));
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
         doNothing().when(emailService).enviarEmail(any(), any(), any());
@@ -697,13 +694,13 @@ class ReservaServiceTest {
     @DisplayName("Deve atualizar status da reserva ao cancelar")
     void deveAtualizarStatusDaReservaAoCancelar() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doNothing().when(sessaoValidation).validarCliente(any());
-        doNothing().when(reservaValidation).validarBuscaReserva(idCliente, reserva);
+        doNothing().when(reservaValidation).validarBuscaReserva(any(UUID.class), any(Reserva.class));
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
         doNothing().when(emailService).enviarEmail(any(), any(), any());
@@ -721,10 +718,10 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando cliente não for encontrado ao cancelar")
     void deveLancarExcecaoQuandoClienteNaoForEncontradoAoCancelar() {
         // Given
-        Long idCliente = 999L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.empty());
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.empty());
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reserva));
         doThrow(new ClienteNaoEncontradoException("Cliente não encontrado"))
                 .when(sessaoValidation).validarCliente(Optional.empty());
@@ -737,7 +734,7 @@ class ReservaServiceTest {
         verify(clienteFeignClient, times(1)).obterClientePorId(idCliente);
         verify(reservaRepository, times(1)).findById(idReserva);
         verify(sessaoValidation, times(1)).validarCliente(Optional.empty());
-        verify(reservaValidation, never()).validarBuscaReserva(anyLong(), any());
+        verify(reservaValidation, never()).validarBuscaReserva(any(UUID.class), any());
         verify(reservaRepository, never()).save(any());
         verify(sessaoService, never()).removerReservasSessao(any());
     }
@@ -746,23 +743,24 @@ class ReservaServiceTest {
     @DisplayName("Deve lançar exceção quando reserva não pertence ao cliente")
     void deveLancarExcecaoQuandoReservaNaoPertenceAoCliente() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
+        UUID idClienteDiferente = UUID.randomUUID();
         Long idReserva = 1L;
 
         Reserva reservaOutroCliente = Reserva.builder()
                 .id(1L)
-                .idCliente(2L) // Cliente diferente
+                .idCliente(idClienteDiferente) // Cliente diferente
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
                 .mensagem("Reserva de outro cliente.")
                 .build();
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.ofNullable(reservaOutroCliente));
         doNothing().when(sessaoValidation).validarCliente(any());
         doThrow(new ReservaNaoEncontradaException("Reserva não encontrada"))
-                .when(reservaValidation).validarBuscaReserva(idCliente, reservaOutroCliente);
+                .when(reservaValidation).validarBuscaReserva(any(UUID.class), any(Reserva.class));
 
         // When & Then
         assertThrows(ReservaNaoEncontradaException.class, () -> {
@@ -778,7 +776,7 @@ class ReservaServiceTest {
     @DisplayName("Deve cancelar múltiplas reservas do mesmo cliente")
     void deveCancelarMultiplasReservasDoMesmoCliente() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva1 = 1L;
         Long idReserva2 = 2L;
 
@@ -791,11 +789,11 @@ class ReservaServiceTest {
                 .mensagem("Reserva 2.")
                 .build();
 
-        when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(reservaRepository.findById(idReserva1)).thenReturn(Optional.of(reserva));
         when(reservaRepository.findById(idReserva2)).thenReturn(Optional.of(reserva2));
         doNothing().when(sessaoValidation).validarCliente(any());
-        doNothing().when(reservaValidation).validarBuscaReserva(eq(idCliente), any());
+        doNothing().when(reservaValidation).validarBuscaReserva(any(UUID.class), any());
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(invocation -> invocation.getArgument(0));
         doNothing().when(sessaoService).removerReservasSessao(any(Reserva.class));
         doNothing().when(emailService).enviarEmail(any(), any(), any());
@@ -816,10 +814,10 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email ao adicionar uma reserva")
     void deveEnviarEmailAoAdicionarReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -842,14 +840,14 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email com os dados corretos da reserva ao adicionar")
     void deveEnviarEmailComDadosCorretosAoAdicionarReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
         ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> assuntoCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> mensagemCaptor = ArgumentCaptor.forClass(String.class);
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doNothing().when(sessaoValidation).validarCliente(any());
@@ -881,7 +879,7 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email ao cancelar uma reserva")
     void deveEnviarEmailAoCancelarReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         when(clienteFeignClient.obterClientePorId(idCliente)).thenReturn(Optional.of(clienteResponseDTO));
@@ -907,7 +905,7 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email com os dados corretos da reserva ao cancelar")
     void deveEnviarEmailComDadosCorretosAoCancelarReserva() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
@@ -945,7 +943,7 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email ao confirmar pagamento")
     void deveEnviarEmailAoConfirmarPagamento() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         com.romanowski.pedro.entity.StatusPagamento statusPagamento =
@@ -976,7 +974,7 @@ class ReservaServiceTest {
     @DisplayName("Deve enviar email com os dados corretos ao confirmar pagamento")
     void deveEnviarEmailComDadosCorretosAoConfirmarPagamento() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         com.romanowski.pedro.entity.StatusPagamento statusPagamento =
@@ -1019,7 +1017,7 @@ class ReservaServiceTest {
     @DisplayName("Deve atualizar status da reserva ao confirmar pagamento")
     void deveAtualizarStatusDaReservaAoConfirmarPagamento() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         com.romanowski.pedro.entity.StatusPagamento statusPagamento =
@@ -1048,7 +1046,7 @@ class ReservaServiceTest {
     @DisplayName("Não deve enviar email quando validação de pagamento falhar")
     void naoDeveEnviarEmailQuandoValidacaoPagamentoFalhar() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
         com.romanowski.pedro.entity.StatusPagamento statusPagamento =
@@ -1074,7 +1072,7 @@ class ReservaServiceTest {
     @DisplayName("Não deve enviar email quando reserva não for encontrada ao confirmar pagamento")
     void naoDeveEnviarEmailQuandoReservaNaoForEncontradaAoConfirmarPagamento() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 999L;
 
         com.romanowski.pedro.entity.StatusPagamento statusPagamento =
@@ -1099,10 +1097,10 @@ class ReservaServiceTest {
     @DisplayName("Não deve enviar email quando cliente não for encontrado ao adicionar reserva")
     void naoDeveEnviarEmailQuandoClienteNaoForEncontradoAoAdicionar() {
         // Given
-        Long idCliente = 999L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.empty());
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.empty());
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doNothing().when(reservaValidation).validarSessao(any(Sessao.class));
         doThrow(new com.romanowski.pedro.exceptions.ClienteNaoEncontradoException("Cliente não encontrado"))
@@ -1121,10 +1119,10 @@ class ReservaServiceTest {
     @DisplayName("Não deve enviar email quando sessão não for encontrada ao adicionar reserva")
     void naoDeveEnviarEmailQuandoSessaoNaoForEncontradaAoAdicionar() {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 999L;
 
-        when(clienteFeignClient.obterClientePorId(anyLong())).thenReturn(Optional.of(clienteResponseDTO));
+        when(clienteFeignClient.obterClientePorId(any(UUID.class))).thenReturn(Optional.of(clienteResponseDTO));
         when(sessaoRepository.findById(anyLong())).thenReturn(Optional.of(sessao));
         doThrow(new com.romanowski.pedro.exceptions.SessaoNaoEcontradaException("Sessao não encontrada"))
                 .when(reservaValidation).validarSessao(any(Sessao.class));

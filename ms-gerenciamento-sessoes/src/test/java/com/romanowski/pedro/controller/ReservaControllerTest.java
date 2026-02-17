@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -50,6 +51,8 @@ class ReservaControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(reservaController).build();
 
+        UUID testClienteId = UUID.randomUUID();
+
         // Dados de teste
         sessao = Sessao.builder()
                 .id(1L)
@@ -63,7 +66,7 @@ class ReservaControllerTest {
 
         reserva = Reserva.builder()
                 .id(1L)
-                .idCliente(1L)
+                .idCliente(testClienteId)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -72,7 +75,7 @@ class ReservaControllerTest {
 
         reservaResponseDTO = new ReservaResponseDTO(
                 1L,
-                1L,
+                testClienteId,
                 1L,
                 false,
                 true,
@@ -84,10 +87,10 @@ class ReservaControllerTest {
     @DisplayName("Deve criar uma reserva com sucesso")
     void deveCriarReservaComSucesso() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao = 1L;
 
-        when(reservaService.adicionarReserva(anyLong(), anyLong())).thenReturn(reserva);
+        when(reservaService.adicionarReserva(any(UUID.class), anyLong())).thenReturn(reserva);
         when(reservaMapper.toResponseDTO(any(Reserva.class))).thenReturn(reservaResponseDTO);
 
         // When & Then
@@ -95,7 +98,6 @@ class ReservaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.idCliente").value(1L))
                 .andExpect(jsonPath("$.idSessao").value(1L))
                 .andExpect(jsonPath("$.pagamentoConfirmado").value(false))
                 .andExpect(jsonPath("$.ativa").value(true))
@@ -110,8 +112,8 @@ class ReservaControllerTest {
     void deveCriarReservaParaDiferentesClientes() throws Exception {
         // Given
         Long idSessao = 1L;
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
 
         Reserva reserva2 = Reserva.builder()
                 .id(2L)
@@ -124,7 +126,7 @@ class ReservaControllerTest {
 
         ReservaResponseDTO reservaResponseDTO2 = new ReservaResponseDTO(
                 2L,
-                2L,
+                idCliente2,
                 1L,
                 false,
                 true,
@@ -140,15 +142,13 @@ class ReservaControllerTest {
         mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente1, idSessao)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.idCliente").value(1L));
+                .andExpect(jsonPath("$.id").value(1L));
 
         // When & Then - Cliente 2
         mockMvc.perform(post("/v1/reservas/{idCliente}/{idSessao}", idCliente2, idSessao)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(2L))
-                .andExpect(jsonPath("$.idCliente").value(2L));
+                .andExpect(jsonPath("$.id").value(2L));
 
         verify(reservaService, times(1)).adicionarReserva(idCliente1, idSessao);
         verify(reservaService, times(1)).adicionarReserva(idCliente2, idSessao);
@@ -158,7 +158,7 @@ class ReservaControllerTest {
     @DisplayName("Deve criar reserva para diferentes sessões")
     void deveCriarReservaParaDiferentesSessoes() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idSessao1 = 1L;
         Long idSessao2 = 2L;
 
@@ -183,7 +183,7 @@ class ReservaControllerTest {
 
         ReservaResponseDTO reservaResponseDTO2 = new ReservaResponseDTO(
                 2L,
-                1L,
+                idCliente,
                 2L,
                 false,
                 true,
@@ -217,7 +217,7 @@ class ReservaControllerTest {
     @DisplayName("Deve listar todas as reservas de um cliente com sucesso")
     void deveListarReservasDeUmClienteComSucesso() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
 
         Sessao sessao2 = Sessao.builder()
                 .id(2L)
@@ -240,7 +240,7 @@ class ReservaControllerTest {
 
         ReservaResponseDTO reservaResponseDTO2 = new ReservaResponseDTO(
                 2L,
-                1L,
+                idCliente,
                 2L,
                 true,
                 true,
@@ -260,13 +260,11 @@ class ReservaControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].idCliente").value(1L))
                 .andExpect(jsonPath("$[0].idSessao").value(1L))
                 .andExpect(jsonPath("$[0].pagamentoConfirmado").value(false))
                 .andExpect(jsonPath("$[0].ativa").value(true))
                 .andExpect(jsonPath("$[0].mensagem").value("Reserva realizada com sucesso. Para confirma-lá, conclua o pagamento."))
                 .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].idCliente").value(1L))
                 .andExpect(jsonPath("$[1].idSessao").value(2L))
                 .andExpect(jsonPath("$[1].pagamentoConfirmado").value(true))
                 .andExpect(jsonPath("$[1].ativa").value(true))
@@ -281,7 +279,7 @@ class ReservaControllerTest {
     @DisplayName("Deve listar apenas uma reserva quando cliente possui apenas uma")
     void deveListarApenasUmaReservaQuandoClientePossuiApenaUma() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         List<Reserva> reservas = List.of(reserva);
 
         when(reservaService.listarReservas(idCliente)).thenReturn(reservas);
@@ -294,7 +292,6 @@ class ReservaControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].idCliente").value(1L))
                 .andExpect(jsonPath("$[0].idSessao").value(1L))
                 .andExpect(jsonPath("$[0].pagamentoConfirmado").value(false))
                 .andExpect(jsonPath("$[0].ativa").value(true));
@@ -307,8 +304,8 @@ class ReservaControllerTest {
     @DisplayName("Deve listar reservas de diferentes clientes separadamente")
     void deveListarReservasDeDiferentesClientesSeparadamente() throws Exception {
         // Given
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
 
         Reserva reservaCliente2 = Reserva.builder()
                 .id(3L)
@@ -321,7 +318,7 @@ class ReservaControllerTest {
 
         ReservaResponseDTO reservaResponseDTOCliente2 = new ReservaResponseDTO(
                 3L,
-                2L,
+                idCliente2,
                 1L,
                 false,
                 true,
@@ -342,8 +339,7 @@ class ReservaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].idCliente").value(1L));
+                .andExpect(jsonPath("$[0].id").value(1L));
 
         // When & Then - Cliente 2
         mockMvc.perform(get("/v1/reservas/{idCliente}", idCliente2)
@@ -351,8 +347,7 @@ class ReservaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(3L))
-                .andExpect(jsonPath("$[0].idCliente").value(2L));
+                .andExpect(jsonPath("$[0].id").value(3L));
 
         verify(reservaService, times(1)).listarReservas(idCliente1);
         verify(reservaService, times(1)).listarReservas(idCliente2);
@@ -363,10 +358,10 @@ class ReservaControllerTest {
     @DisplayName("Deve buscar uma reserva por ID com sucesso")
     void deveBuscarReservaPorIdComSucesso() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        when(reservaService.buscarReservaPorId(idCliente, idReserva)).thenReturn(Optional.of(reserva));
+        when(reservaService.buscarReservaPorId(any(UUID.class), anyLong())).thenReturn(Optional.of(reserva));
         when(reservaMapper.entityToResponseDTO(Optional.of(reserva))).thenReturn(reservaResponseDTO);
 
         // When & Then
@@ -374,7 +369,6 @@ class ReservaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.idCliente").value(1L))
                 .andExpect(jsonPath("$.idSessao").value(1L))
                 .andExpect(jsonPath("$.pagamentoConfirmado").value(false))
                 .andExpect(jsonPath("$.ativa").value(true))
@@ -388,14 +382,14 @@ class ReservaControllerTest {
     @DisplayName("Deve buscar reservas de diferentes clientes separadamente")
     void deveBuscarReservasDeDiferentesClientesSeparadamente() throws Exception {
         // Given
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idReserva1 = 1L;
         Long idReserva2 = 2L;
 
         Reserva reservaCliente2 = Reserva.builder()
                 .id(2L)
-                .idCliente(2L)
+                .idCliente(idCliente2)
                 .sessao(sessao)
                 .pagamentoConfirmado(false)
                 .ativa(true)
@@ -404,7 +398,7 @@ class ReservaControllerTest {
 
         ReservaResponseDTO reservaResponseDTOCliente2 = new ReservaResponseDTO(
                 2L,
-                2L,
+                idCliente2,
                 1L,
                 false,
                 true,
@@ -420,15 +414,13 @@ class ReservaControllerTest {
         mockMvc.perform(get("/v1/reservas/{idCliente}/{idReserva}", idCliente1, idReserva1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.idCliente").value(1L));
+                .andExpect(jsonPath("$.id").value(1L));
 
         // When & Then - Cliente 2
         mockMvc.perform(get("/v1/reservas/{idCliente}/{idReserva}", idCliente2, idReserva2)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(2L))
-                .andExpect(jsonPath("$.idCliente").value(2L));
+                .andExpect(jsonPath("$.id").value(2L));
 
         verify(reservaService, times(1)).buscarReservaPorId(idCliente1, idReserva1);
         verify(reservaService, times(1)).buscarReservaPorId(idCliente2, idReserva2);
@@ -438,10 +430,10 @@ class ReservaControllerTest {
     @DisplayName("Deve cancelar uma reserva com sucesso")
     void deveCancelarReservaComSucesso() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva = 1L;
 
-        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva);
+        doNothing().when(reservaService).cancelarReserva(any(UUID.class), anyLong());
 
         // When & Then
         mockMvc.perform(delete("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva)
@@ -456,12 +448,11 @@ class ReservaControllerTest {
     @DisplayName("Deve cancelar múltiplas reservas do mesmo cliente")
     void deveCancelarMultiplasReservasDoMesmoCliente() throws Exception {
         // Given
-        Long idCliente = 1L;
+        UUID idCliente = UUID.randomUUID();
         Long idReserva1 = 1L;
         Long idReserva2 = 2L;
 
-        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva1);
-        doNothing().when(reservaService).cancelarReserva(idCliente, idReserva2);
+        doNothing().when(reservaService).cancelarReserva(any(UUID.class), anyLong());
 
         // When & Then - Cancelar primeira reserva
         mockMvc.perform(delete("/v1/reservas/{idCliente}/{idReserva}", idCliente, idReserva1)
