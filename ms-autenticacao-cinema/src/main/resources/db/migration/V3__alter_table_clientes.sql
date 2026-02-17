@@ -1,1 +1,0 @@
-ALTER TABLE clientes add column perfil varchar(50) after saldo;

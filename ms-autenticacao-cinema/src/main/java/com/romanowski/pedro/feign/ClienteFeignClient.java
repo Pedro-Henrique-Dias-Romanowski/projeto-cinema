@@ -1,5 +1,6 @@
 package com.romanowski.pedro.feign;
 
+import com.romanowski.pedro.dto.request.CadastroFeignClientRequestDTO;
 import com.romanowski.pedro.dto.request.ClienteRequestDTO;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -17,5 +18,5 @@ public interface ClienteFeignClient {
     Optional<ClienteResponseDTO> obterClientePorId(@PathVariable Long id);
 
     @PostMapping("/v1/clientes")
-    ClienteResponseDTO cadastrarCliente(@RequestBody ClienteRequestDTO clienteResponseDTO);
+    ClienteResponseDTO cadastrarCliente(@RequestBody CadastroFeignClientRequestDTO clienteRequestDTO);
 }

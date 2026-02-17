@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,6 +43,8 @@ class LoginServiceTest {
 
     private ClienteEntity clienteEntity;
     private AdministradorEntity administradorEntity;
+    private UUID clienteId;
+    private UUID adminId;
     private static final String JWT_SECRET = "test-secret-key-for-jwt-token-generation";
 
     @BeforeEach
@@ -49,8 +52,12 @@ class LoginServiceTest {
         // Configura o JWT_SECRET usando reflection
         ReflectionTestUtils.setField(loginService, "JWT_SECRET", JWT_SECRET);
 
+        // Gera IDs únicos para cada teste
+        clienteId = UUID.randomUUID();
+        adminId = UUID.randomUUID();
+
         clienteEntity = new ClienteEntity();
-        clienteEntity.setId(1L);
+        clienteEntity.setId(clienteId);
         clienteEntity.setNome("João Silva");
         clienteEntity.setEmail("joao@example.com");
         clienteEntity.setSenha("senhaEncriptada");
@@ -58,7 +65,7 @@ class LoginServiceTest {
         clienteEntity.setPerfil(Perfil.CLIENTE);
 
         administradorEntity = new AdministradorEntity();
-        administradorEntity.setId(2L);
+        administradorEntity.setId(adminId);
         administradorEntity.setNome("Admin Silva");
         administradorEntity.setEmail("admin@example.com");
         administradorEntity.setSenha("senhaEncriptada");
@@ -176,7 +183,7 @@ class LoginServiceTest {
                     .build()
                     .verify(token);
 
-            assertThat(decodedJWT.getSubject()).isEqualTo("1");
+            assertThat(decodedJWT.getSubject()).isEqualTo(clienteId.toString());
             assertThat(decodedJWT.getClaim("email").asString()).isEqualTo("joao@example.com");
             assertThat(decodedJWT.getClaim("roles").asList(String.class)).containsExactly("CLIENTE");
             assertThat(decodedJWT.getIssuer()).isEqualTo("cinecom-auth");
@@ -220,7 +227,7 @@ class LoginServiceTest {
         void deveGerarTokensDiferentesParaClientesDiferentes() {
             // Arrange
             ClienteEntity outroCliente = new ClienteEntity();
-            outroCliente.setId(2L);
+            outroCliente.setId(UUID.randomUUID());
             outroCliente.setNome("Maria Santos");
             outroCliente.setEmail("maria@example.com");
             outroCliente.setSenha("senhaEncriptada");
@@ -265,7 +272,7 @@ class LoginServiceTest {
                     .build()
                     .verify(token);
 
-            assertThat(decodedJWT.getSubject()).isEqualTo("2");
+            assertThat(decodedJWT.getSubject()).isEqualTo(adminId.toString());
             assertThat(decodedJWT.getClaim("email").asString()).isEqualTo("admin@example.com");
             assertThat(decodedJWT.getClaim("roles").asList(String.class)).containsExactly("ADMIN");
             assertThat(decodedJWT.getIssuer()).isEqualTo("cinecom-auth");
@@ -327,7 +334,7 @@ class LoginServiceTest {
         void deveGerarTokensDiferentesParaAdministradoresDiferentes() {
             // Arrange
             AdministradorEntity outroAdmin = new AdministradorEntity();
-            outroAdmin.setId(3L);
+            outroAdmin.setId(UUID.randomUUID());
             outroAdmin.setNome("Outro Admin");
             outroAdmin.setEmail("outro@example.com");
             outroAdmin.setSenha("senhaEncriptada");
@@ -426,8 +433,8 @@ class LoginServiceTest {
                     .build()
                     .verify(tokenAdmin);
 
-            assertThat(decodedCliente.getSubject()).isEqualTo("1");
-            assertThat(decodedAdmin.getSubject()).isEqualTo("2");
+            assertThat(decodedCliente.getSubject()).isEqualTo(clienteId.toString());
+            assertThat(decodedAdmin.getSubject()).isEqualTo(adminId.toString());
             assertThat(decodedCliente.getSubject()).isNotEqualTo(decodedAdmin.getSubject());
         }
     }

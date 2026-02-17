@@ -30,6 +30,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.*;
@@ -85,7 +86,7 @@ class CadastroClienteControllerTest {
         );
 
         clienteEntity = new ClienteEntity();
-        clienteEntity.setId(1L);
+        clienteEntity.setId(UUID.randomUUID());
         clienteEntity.setNome("João Silva");
         clienteEntity.setEmail("joao@example.com");
         clienteEntity.setSenha("senhaEncriptada");
@@ -93,7 +94,7 @@ class CadastroClienteControllerTest {
         clienteEntity.setPerfil(Perfil.CLIENTE);
 
         clienteResponseDTO = new ClienteResponseDTO(
-                1L,
+                UUID.randomUUID(),
                 "João Silva",
                 "joao@example.com"
         );
@@ -121,7 +122,7 @@ class CadastroClienteControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.id", is(1)))
+                    .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.nome", is("João Silva")))
                     .andExpect(jsonPath("$.email", is("joao@example.com")));
 
@@ -142,7 +143,7 @@ class CadastroClienteControllerTest {
                     0.0
             );
 
-            ClienteResponseDTO responseDTO = new ClienteResponseDTO(2L, "Maria Santos", "maria@example.com");
+            ClienteResponseDTO responseDTO = new ClienteResponseDTO(UUID.randomUUID(), "Maria Santos", "maria@example.com");
 
             when(clienteMapper.toEntity(any(ClienteRequestDTO.class))).thenReturn(clienteEntity);
             when(cadastroClienteService.cadastrarCliente(any(ClienteEntity.class))).thenReturn(clienteEntity);

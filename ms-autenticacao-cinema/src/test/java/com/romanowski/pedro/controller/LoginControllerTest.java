@@ -29,6 +29,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.UUID;
+
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -83,7 +85,7 @@ class LoginControllerTest {
         );
 
         clienteEntity = new ClienteEntity();
-        clienteEntity.setId(1L);
+        clienteEntity.setId(UUID.randomUUID());
         clienteEntity.setNome("João Silva");
         clienteEntity.setEmail("usuario@example.com");
         clienteEntity.setSenha("senhaEncriptada");
@@ -91,7 +93,7 @@ class LoginControllerTest {
         clienteEntity.setPerfil(Perfil.CLIENTE);
 
         administradorEntity = new AdministradorEntity();
-        administradorEntity.setId(1L);
+        administradorEntity.setId(UUID.randomUUID());
         administradorEntity.setNome("Admin Silva");
         administradorEntity.setEmail("admin@example.com");
         administradorEntity.setSenha("senhaEncriptada");
@@ -132,7 +134,7 @@ class LoginControllerTest {
                     .andExpect(jsonPath("$.token", is(tokenGerado)))
                     .andExpect(jsonPath("$.dataHoraLogin", notNullValue()))
                     .andExpect(jsonPath("$.perfilAtribuido", is("CLIENTE")))
-                    .andExpect(jsonPath("$.id", is(1)));
+                    .andExpect(jsonPath("$.id").exists());
 
             // Verify
             verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
@@ -237,7 +239,7 @@ class LoginControllerTest {
                     .andExpect(jsonPath("$.token", is(tokenGerado)))
                     .andExpect(jsonPath("$.dataHoraLogin", notNullValue()))
                     .andExpect(jsonPath("$.perfilAtribuido", is("ADMIN")))
-                    .andExpect(jsonPath("$.id", is(1)));
+                    .andExpect(jsonPath("$.id").exists());
 
             // Verify
             verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));

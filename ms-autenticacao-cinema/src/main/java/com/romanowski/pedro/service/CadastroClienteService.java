@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class CadastroClienteService {
 
@@ -36,6 +38,7 @@ public class CadastroClienteService {
         String senhaCriptografada = passwordEncoder.encode(cliente.getSenha());
         cliente.setSenha(senhaCriptografada);
         cliente.setPerfil(Perfil.CLIENTE);
+        cliente.setId(UUID.randomUUID());
         var clienteSalvo = clienteRepository.save(cliente);
         var clienteRequestDTO = clienteMapper.toDTO(clienteSalvo);
         clienteFeignClient.cadastrarCliente(clienteRequestDTO);

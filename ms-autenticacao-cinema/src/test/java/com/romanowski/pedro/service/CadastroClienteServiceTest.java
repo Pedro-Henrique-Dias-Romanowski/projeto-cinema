@@ -1,6 +1,6 @@
 package com.romanowski.pedro.service;
 
-import com.romanowski.pedro.dto.request.ClienteRequestDTO;
+import com.romanowski.pedro.dto.request.CadastroFeignClientRequestDTO;
 import com.romanowski.pedro.dto.response.ClienteResponseDTO;
 import com.romanowski.pedro.entity.ClienteEntity;
 import com.romanowski.pedro.enums.Perfil;
@@ -19,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,10 +54,10 @@ class CadastroClienteServiceTest {
     private ArgumentCaptor<ClienteEntity> clienteEntityCaptor;
 
     @Captor
-    private ArgumentCaptor<ClienteRequestDTO> clienteRequestDTOCaptor;
+    private ArgumentCaptor<CadastroFeignClientRequestDTO> cadastroFeignClientRequestDTOCaptor;
 
     private ClienteEntity clienteEntity;
-    private ClienteRequestDTO clienteRequestDTO;
+    private CadastroFeignClientRequestDTO cadastroFeignClientRequestDTO;
     private ClienteResponseDTO clienteResponseDTO;
 
     @BeforeEach
@@ -66,7 +68,8 @@ class CadastroClienteServiceTest {
         clienteEntity.setSenha("senha123");
         clienteEntity.setSaldo(500.0);
 
-        clienteRequestDTO = new ClienteRequestDTO(
+        cadastroFeignClientRequestDTO = new CadastroFeignClientRequestDTO(
+                UUID.randomUUID(),
                 "João Silva",
                 "joao@example.com",
                 "senhaCriptografada",
@@ -74,7 +77,7 @@ class CadastroClienteServiceTest {
         );
 
         clienteResponseDTO = new ClienteResponseDTO(
-                1L,
+                UUID.randomUUID(),
                 "João Silva",
                 "joao@example.com"
         );
@@ -94,15 +97,15 @@ class CadastroClienteServiceTest {
             doNothing().when(cadastroClienteValidation).validarCadastroCliente(any(ClienteEntity.class));
             when(passwordEncoder.encode(anyString())).thenReturn(senhaCriptografada);
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
-            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(clienteRequestDTO);
-            when(clienteFeignClient.cadastrarCliente(any(ClienteRequestDTO.class))).thenReturn(clienteResponseDTO);
+            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(cadastroFeignClientRequestDTO);
+            when(clienteFeignClient.cadastrarCliente(any(CadastroFeignClientRequestDTO.class))).thenReturn(clienteResponseDTO);
 
             // Act
             ClienteEntity resultado = cadastroClienteService.cadastrarCliente(clienteEntity);
 
             // Assert
             assertThat(resultado).isNotNull();
-            assertThat(resultado.getId()).isEqualTo(1L);
+            assertThat(resultado.getId()).isNotNull();
             assertThat(resultado.getEmail()).isEqualTo("joao@example.com");
             assertThat(resultado.getSenha()).isEqualTo(senhaCriptografada);
             assertThat(resultado.getPerfil()).isEqualTo(Perfil.CLIENTE);
@@ -121,8 +124,8 @@ class CadastroClienteServiceTest {
             doNothing().when(cadastroClienteValidation).validarCadastroCliente(any(ClienteEntity.class));
             when(passwordEncoder.encode(senhaOriginal)).thenReturn(senhaCriptografada);
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
-            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(clienteRequestDTO);
-            when(clienteFeignClient.cadastrarCliente(any(ClienteRequestDTO.class))).thenReturn(clienteResponseDTO);
+            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(cadastroFeignClientRequestDTO);
+            when(clienteFeignClient.cadastrarCliente(any(CadastroFeignClientRequestDTO.class))).thenReturn(clienteResponseDTO);
 
             // Act
             cadastroClienteService.cadastrarCliente(clienteEntity);
@@ -143,8 +146,8 @@ class CadastroClienteServiceTest {
             doNothing().when(cadastroClienteValidation).validarCadastroCliente(any(ClienteEntity.class));
             when(passwordEncoder.encode(anyString())).thenReturn(senhaCriptografada);
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
-            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(clienteRequestDTO);
-            when(clienteFeignClient.cadastrarCliente(any(ClienteRequestDTO.class))).thenReturn(clienteResponseDTO);
+            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(cadastroFeignClientRequestDTO);
+            when(clienteFeignClient.cadastrarCliente(any(CadastroFeignClientRequestDTO.class))).thenReturn(clienteResponseDTO);
 
             // Act
             cadastroClienteService.cadastrarCliente(clienteEntity);
@@ -164,15 +167,15 @@ class CadastroClienteServiceTest {
             doNothing().when(cadastroClienteValidation).validarCadastroCliente(any(ClienteEntity.class));
             when(passwordEncoder.encode(anyString())).thenReturn(senhaCriptografada);
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
-            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(clienteRequestDTO);
-            when(clienteFeignClient.cadastrarCliente(any(ClienteRequestDTO.class))).thenReturn(clienteResponseDTO);
+            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(cadastroFeignClientRequestDTO);
+            when(clienteFeignClient.cadastrarCliente(any(CadastroFeignClientRequestDTO.class))).thenReturn(clienteResponseDTO);
 
             // Act
             cadastroClienteService.cadastrarCliente(clienteEntity);
 
             // Assert
-            verify(clienteFeignClient).cadastrarCliente(clienteRequestDTOCaptor.capture());
-            assertThat(clienteRequestDTOCaptor.getValue()).isEqualTo(clienteRequestDTO);
+            verify(clienteFeignClient).cadastrarCliente(cadastroFeignClientRequestDTOCaptor.capture());
+            assertThat(cadastroFeignClientRequestDTOCaptor.getValue()).isEqualTo(cadastroFeignClientRequestDTO);
         }
     }
 
@@ -193,7 +196,7 @@ class CadastroClienteServiceTest {
                     .hasMessage("Erro de validação");
 
             verify(clienteRepository, never()).save(any(ClienteEntity.class));
-            verify(clienteFeignClient, never()).cadastrarCliente(any(ClienteRequestDTO.class));
+            verify(clienteFeignClient, never()).cadastrarCliente(any(CadastroFeignClientRequestDTO.class));
         }
     }
 
@@ -217,7 +220,7 @@ class CadastroClienteServiceTest {
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("Erro de banco de dados");
 
-            verify(clienteFeignClient, never()).cadastrarCliente(any(ClienteRequestDTO.class));
+            verify(clienteFeignClient, never()).cadastrarCliente(any(CadastroFeignClientRequestDTO.class));
         }
 
         @Test
@@ -230,8 +233,8 @@ class CadastroClienteServiceTest {
             doNothing().when(cadastroClienteValidation).validarCadastroCliente(any(ClienteEntity.class));
             when(passwordEncoder.encode(anyString())).thenReturn(senhaCriptografada);
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
-            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(clienteRequestDTO);
-            when(clienteFeignClient.cadastrarCliente(any(ClienteRequestDTO.class)))
+            when(clienteMapper.toDTO(any(ClienteEntity.class))).thenReturn(cadastroFeignClientRequestDTO);
+            when(clienteFeignClient.cadastrarCliente(any(CadastroFeignClientRequestDTO.class)))
                     .thenThrow(new RuntimeException("Serviço indisponível"));
 
             // Act & Assert
@@ -243,7 +246,7 @@ class CadastroClienteServiceTest {
 
     private ClienteEntity criarClienteSalvo(String senhaCriptografada) {
         ClienteEntity clienteSalvo = new ClienteEntity();
-        clienteSalvo.setId(1L);
+        clienteSalvo.setId(UUID.randomUUID());
         clienteSalvo.setNome("João Silva");
         clienteSalvo.setEmail("joao@example.com");
         clienteSalvo.setSenha(senhaCriptografada);
@@ -252,3 +255,4 @@ class CadastroClienteServiceTest {
         return clienteSalvo;
     }
 }
+
