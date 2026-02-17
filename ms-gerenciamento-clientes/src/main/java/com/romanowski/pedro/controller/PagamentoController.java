@@ -5,8 +5,11 @@ import com.romanowski.pedro.dto.request.PagamentoRequestDTO;
 import com.romanowski.pedro.service.PagamentoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1")
@@ -19,7 +22,8 @@ public class PagamentoController implements PagamentoControllerSwagger {
     }
 
     @Override
-    public ResponseEntity<Void> realizarPagamento(Long idCliente, Long idReserva, PagamentoRequestDTO pagamentoRequestDTO) {
+    @PreAuthorize("(hasRole('CLIENTE') and #idCliente.toString() == authentication.principal.subject)")
+    public ResponseEntity<Void> realizarPagamento(UUID idCliente, Long idReserva, PagamentoRequestDTO pagamentoRequestDTO) {
         pagamentoService.realizarPagamento(idCliente, idReserva, pagamentoRequestDTO.valor());
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }

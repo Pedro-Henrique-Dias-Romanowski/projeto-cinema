@@ -1,16 +1,35 @@
 package com.romanowski.pedro.config;
 
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity()
 public class SecurityConfiguration {
+
+
+    @Value("${spring.security.jwt.secret}")
+    private String jwtSecret;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -18,10 +37,44 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/clientes").permitAll()
+                        .anyRequest().authenticated()
                 )
+                .oauth2ResourceServer(oauth -> oauth.jwt(
+                        jwt -> jwt.
+                                decoder(jwtDecoder()).
+                                jwtAuthenticationConverter(jwtAuthenticationConverter())
+                ))
+
                 //.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
+
+        // aqui você diz qual claim contém as roles
+        converter.setAuthoritiesClaimName("roles");
+        converter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(converter);
+
+        return jwtConverter;
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+
+        //byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
+        SecretKeySpec secretKey = new SecretKeySpec(
+                jwtSecret.getBytes(StandardCharsets.UTF_8),
+                "HmacSHA256"
+        );
+
+        return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
     @Bean

@@ -3,6 +3,10 @@ server:
 
 URL_RESERVA_SERVICE: http://localhost:8081
 
+logging:
+    level:
+      org.springframework.security: DEBUG
+
 spring:
   application:
     name:
@@ -39,12 +43,9 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-  spring:
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            secret-key: ${JWT_SECRET:123456789}
+  security:
+    jwt:
+      secret: ${JWT_SECRET:fT8X27NnYKddsmTlJMIbwf2XvXPvBHdEP4C1iI4qZSU=}
 springdoc:
   api-docs:
     path: /book-service/v3/api-docs
