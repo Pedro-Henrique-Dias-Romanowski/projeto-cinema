@@ -20,4 +20,4 @@ spring:
     open-in-view: false
   security:
     jwt:
-      secret: ${JWT_SECRET:123456789}
+      secret: ${JWT_SECRET:fT8X27NnYKddsmTlJMIbwf2XvXPvBHdEP4C1iI4qZSU=}
