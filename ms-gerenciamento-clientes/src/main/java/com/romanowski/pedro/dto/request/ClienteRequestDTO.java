@@ -2,7 +2,12 @@ package com.romanowski.pedro.dto.request;
 
 import jakarta.validation.constraints.*;
 
+import java.util.UUID;
+
 public record ClienteRequestDTO(
+
+        @NotNull
+        UUID id,
 
         @NotBlank
         String nome,

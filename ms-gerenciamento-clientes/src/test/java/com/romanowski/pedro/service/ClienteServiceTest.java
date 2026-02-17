@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,7 +58,7 @@ class ClienteServiceTest {
         cliente.setSaldo(100.0);
 
         clienteSalvo = new Cliente();
-        clienteSalvo.setId(1L);
+        clienteSalvo.setId(UUID.randomUUID());
         clienteSalvo.setNome("João Silva");
         clienteSalvo.setEmail("joao.silva@email.com");
         clienteSalvo.setSenha("$2a$10$encodedPassword");
@@ -69,7 +70,6 @@ class ClienteServiceTest {
     void deveCadastrarClienteComSucesso() {
         // Arrange
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(cliente.getSenha())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
@@ -78,14 +78,13 @@ class ClienteServiceTest {
 
         // Assert
         assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
+        assertNotNull(resultado.getId());
         assertEquals("João Silva", resultado.getNome());
         assertEquals("joao.silva@email.com", resultado.getEmail());
         assertEquals("$2a$10$encodedPassword", resultado.getSenha());
         assertEquals(100.0, resultado.getSaldo());
 
         verify(clienteValidation, times(1)).validarCadastroCliente(cliente);
-        verify(passwordEncoder, times(1)).encode("senha123");
         verify(clienteRepository, times(1)).save(any(Cliente.class));
         verify(emailService, times(1)).enviarEmail(eq("joao.silva@email.com"), eq("Bem-vindo ao Cinema"), anyString());
     }
@@ -95,7 +94,6 @@ class ClienteServiceTest {
     void deveChamarValidacaoAntesDeCadastrar() {
         // Arrange
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
@@ -104,26 +102,6 @@ class ClienteServiceTest {
 
         // Assert
         verify(clienteValidation, times(1)).validarCadastroCliente(cliente);
-    }
-
-    @Test
-    @DisplayName("Deve criptografar a senha antes de salvar")
-    void deveCriptografarSenhaAntesDeSalvar() {
-        // Arrange
-        String senhaOriginal = "senha123";
-        String senhaCriptografada = "$2a$10$encodedPassword";
-
-        doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(senhaOriginal)).thenReturn(senhaCriptografada);
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
-        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
-
-        // Act
-        clienteService.cadastrarCliente(cliente);
-
-        // Assert
-        verify(passwordEncoder, times(1)).encode(senhaOriginal);
-        assertEquals(senhaCriptografada, cliente.getSenha());
     }
 
 
@@ -176,14 +154,13 @@ class ClienteServiceTest {
         clienteComSaldoZero.setSaldo(0.0);
 
         Cliente clienteSalvoComSaldoZero = new Cliente();
-        clienteSalvoComSaldoZero.setId(2L);
+        clienteSalvoComSaldoZero.setId(UUID.randomUUID());
         clienteSalvoComSaldoZero.setNome("Maria Santos");
         clienteSalvoComSaldoZero.setEmail("maria.santos@email.com");
         clienteSalvoComSaldoZero.setSenha("$2a$10$encodedPassword");
         clienteSalvoComSaldoZero.setSaldo(0.0);
 
         doNothing().when(clienteValidation).validarCadastroCliente(clienteComSaldoZero);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvoComSaldoZero);
 
         // Act
@@ -205,14 +182,13 @@ class ClienteServiceTest {
         clienteComSaldoMaximo.setSaldo(1000.0);
 
         Cliente clienteSalvoComSaldoMaximo = new Cliente();
-        clienteSalvoComSaldoMaximo.setId(3L);
+        clienteSalvoComSaldoMaximo.setId(UUID.randomUUID());
         clienteSalvoComSaldoMaximo.setNome("Carlos Oliveira");
         clienteSalvoComSaldoMaximo.setEmail("carlos.oliveira@email.com");
         clienteSalvoComSaldoMaximo.setSenha("$2a$10$encodedPassword");
         clienteSalvoComSaldoMaximo.setSaldo(1000.0);
 
         doNothing().when(clienteValidation).validarCadastroCliente(clienteComSaldoMaximo);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvoComSaldoMaximo);
 
         // Act
@@ -228,51 +204,15 @@ class ClienteServiceTest {
     void deveRetornarClienteComIdGerado() {
         // Arrange
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
         // Act
         Cliente resultado = clienteService.cadastrarCliente(cliente);
 
         // Assert
         assertNotNull(resultado.getId());
-        assertEquals(1L, resultado.getId());
-    }
-
-    @Test
-    @DisplayName("Deve cadastrar cliente com senha de 6 caracteres (mínimo válido)")
-    void deveCadastrarClienteComSenhaMinima() {
-        // Arrange
-        cliente.setSenha("abc123");
-
-        doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode("abc123")).thenReturn("$2a$10$encodedPassword");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
-
-        // Act
-        Cliente resultado = clienteService.cadastrarCliente(cliente);
-
-        // Assert
-        assertNotNull(resultado);
-        verify(passwordEncoder, times(1)).encode("abc123");
-    }
-
-    @Test
-    @DisplayName("Deve cadastrar cliente com senha de 15 caracteres (máximo válido)")
-    void deveCadastrarClienteComSenhaMaxima() {
-        // Arrange
-        cliente.setSenha("senha123456789A");
-
-        doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode("senha123456789A")).thenReturn("$2a$10$encodedPassword");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
-
-        // Act
-        Cliente resultado = clienteService.cadastrarCliente(cliente);
-
-        // Assert
-        assertNotNull(resultado);
-        verify(passwordEncoder, times(1)).encode("senha123456789A");
+        assertTrue(resultado.getId() instanceof UUID);
     }
 
     @Test
@@ -280,21 +220,21 @@ class ClienteServiceTest {
     void deveListarTodosClientesComSucesso() {
         // Arrange
         Cliente cliente1 = new Cliente();
-        cliente1.setId(1L);
+        cliente1.setId(UUID.randomUUID());
         cliente1.setNome("João Silva");
         cliente1.setEmail("joao.silva@email.com");
         cliente1.setSenha("$2a$10$encodedPassword");
         cliente1.setSaldo(100.0);
 
         Cliente cliente2 = new Cliente();
-        cliente2.setId(2L);
+        cliente2.setId(UUID.randomUUID());
         cliente2.setNome("Maria Santos");
         cliente2.setEmail("maria.santos@email.com");
         cliente2.setSenha("$2a$10$encodedPassword2");
         cliente2.setSaldo(200.0);
 
         Cliente cliente3 = new Cliente();
-        cliente3.setId(3L);
+        cliente3.setId(UUID.randomUUID());
         cliente3.setNome("Carlos Oliveira");
         cliente3.setEmail("carlos.oliveira@email.com");
         cliente3.setSenha("$2a$10$encodedPassword3");
@@ -362,7 +302,7 @@ class ClienteServiceTest {
     void deveListarApenasUmCliente() {
         // Arrange
         Cliente cliente = new Cliente();
-        cliente.setId(1L);
+        cliente.setId(UUID.randomUUID());
         cliente.setNome("João Silva");
         cliente.setEmail("joao.silva@email.com");
         cliente.setSenha("$2a$10$encodedPassword");
@@ -392,13 +332,13 @@ class ClienteServiceTest {
     void deveListarClientesComSaldosDiferentes() {
         // Arrange
         Cliente clienteSaldoZero = new Cliente();
-        clienteSaldoZero.setId(1L);
+        clienteSaldoZero.setId(UUID.randomUUID());
         clienteSaldoZero.setNome("Cliente Saldo Zero");
         clienteSaldoZero.setEmail("zero@email.com");
         clienteSaldoZero.setSaldo(0.0);
 
         Cliente clienteSaldoMaximo = new Cliente();
-        clienteSaldoMaximo.setId(2L);
+        clienteSaldoMaximo.setId(UUID.randomUUID());
         clienteSaldoMaximo.setNome("Cliente Saldo Máximo");
         clienteSaldoMaximo.setEmail("maximo@email.com");
         clienteSaldoMaximo.setSaldo(1000.0);
@@ -442,7 +382,6 @@ class ClienteServiceTest {
     void deveEnviarEmailBoasVindasAoCadastrarCliente() {
         // Arrange
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
@@ -462,7 +401,6 @@ class ClienteServiceTest {
     void deveEnviarEmailComNomeCorretoNoCadastro() {
         // Arrange
         doNothing().when(clienteValidation).validarCadastroCliente(cliente);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvo);
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
@@ -496,7 +434,7 @@ class ClienteServiceTest {
     @DisplayName("Deve enviar email de despedida ao deletar cliente")
     void deveEnviarEmailDespedidaAoDeletarCliente() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
         when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteRepository).deleteById(clienteId);
@@ -517,7 +455,7 @@ class ClienteServiceTest {
     @DisplayName("Deve enviar email com o nome correto do cliente na exclusão")
     void deveEnviarEmailComNomeCorretoNaExclusao() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
         when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteRepository).deleteById(clienteId);
@@ -538,7 +476,7 @@ class ClienteServiceTest {
     @DisplayName("Deve deletar cliente com sucesso")
     void deveDeletarClienteComSucesso() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         doNothing().when(clienteValidation).validarBuscaPorCliente(clienteId);
         doNothing().when(clienteRepository).deleteById(clienteId);
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());

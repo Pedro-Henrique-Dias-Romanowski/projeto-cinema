@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Cliente", description = "Operações disponíveis para clientes do cinema.")
 public interface ClienteControllerSwagger {
@@ -23,10 +24,10 @@ public interface ClienteControllerSwagger {
 
     @Operation(summary = "Buscar cliente por ID", description = "Permite a busca por um cliente específico através do seu ID.")
     @GetMapping("/clientes/{id}")
-    ResponseEntity<ClienteResponseDTO> buscarClientePorId(@PathVariable @Valid Long id);
+    ResponseEntity<ClienteResponseDTO> buscarClientePorId(@PathVariable @Valid UUID id);
 
     @Operation(summary = "Exclusão de um cliente", description = "Permite a exclusão de um cliente específico através do seu ID.")
     @ResponseStatus(code = org.springframework.http.HttpStatus.NO_CONTENT)
     @DeleteMapping("/clientes/{id}")
-    ResponseEntity<Void> deletarCliente(@PathVariable Long id);
+    ResponseEntity<Void> deletarCliente(@PathVariable UUID id);
 }

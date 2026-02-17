@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class ClienteValidation {
 
@@ -45,7 +47,7 @@ public class ClienteValidation {
         }
     }
 
-    public void validarBuscaPorCliente(Long id){
+    public void validarBuscaPorCliente(UUID id){
         if (clienteRepository.findById(id).isEmpty()){
             logger.error("Cliente com id {} não encontrado", id);
             throw new ClienteInexistenteException(mensagemClienteInexistente);

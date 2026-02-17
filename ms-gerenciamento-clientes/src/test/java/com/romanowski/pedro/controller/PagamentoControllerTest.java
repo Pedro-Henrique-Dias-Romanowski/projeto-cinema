@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -28,12 +30,12 @@ class PagamentoControllerTest {
     private PagamentoController pagamentoController;
 
     private PagamentoRequestDTO pagamentoRequestDTO;
-    private Long idCliente;
+    private UUID idCliente;
     private Long idReserva;
 
     @BeforeEach
     void setUp() {
-        idCliente = 1L;
+        idCliente = UUID.randomUUID();
         idReserva = 100L;
         pagamentoRequestDTO = new PagamentoRequestDTO(50.0);
     }
@@ -138,8 +140,8 @@ class PagamentoControllerTest {
     @DisplayName("Deve processar pagamentos para diferentes clientes")
     void deveProcessarPagamentosParaDiferentesClientes() {
         // Arrange
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idReserva1 = 100L;
         Long idReserva2 = 200L;
         PagamentoRequestDTO pagamento = new PagamentoRequestDTO(50.0);

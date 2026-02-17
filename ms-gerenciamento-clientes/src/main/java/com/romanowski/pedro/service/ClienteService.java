@@ -9,9 +9,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ClienteService {
@@ -46,29 +48,39 @@ public class ClienteService {
         return String.format(template, nome);
     }
 
+    @Transactional
     public Cliente cadastrarCliente(Cliente cliente){
         logger.info("Iniciando cadastro do cliente com email: {}", cliente.getEmail());
         clienteValidation.validarCadastroCliente(cliente);
-        String senhaCriptografada = passwordEncoder.encode(cliente.getSenha());
-        cliente.setSenha(senhaCriptografada);
-        var clienteSalvo = clienteRepository.save(cliente);
+        var clienteDB = Cliente.builder()
+                .id(cliente.getId())
+                .nome(cliente.getNome())
+                .email(cliente.getEmail())
+                .senha(cliente.getSenha())
+                .saldo(cliente.getSaldo())
+                .build();
+        var clienteSalvo = clienteRepository.save(clienteDB);
+        System.out.println("ID recebida: " + cliente.getId());
         var mensagem = formatarMensagem(mensagemCadastroClienteEmail, cliente.getNome(), "Bem-vindo(a), %s!");
         emailService.enviarEmail(cliente.getEmail(), "Bem-vindo ao Cinema", mensagem);
         return clienteSalvo;
     }
 
-    public Optional<Cliente> buscarClientePorId(Long id){
+    @Transactional(readOnly = true)
+    public Optional<Cliente> buscarClientePorId(UUID id){
         logger.info("Iniciando busca do cliente com id: {}", id);
         return clienteRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<Cliente> listarClientes(){
         logger.info("Iniciando listagem de clientes");
         clienteValidation.validarListagemClientes();
         return clienteRepository.findAll();
     }
 
-    public void deletarCliente(Long id){
+    @Transactional
+    public void deletarCliente(UUID id){
         logger.info("Iniciando remoção do cliente com id: {}", id);
         clienteValidation.validarBuscaPorCliente(id);
         var cliente = clienteRepository.findById(id).get();

@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,13 +42,13 @@ class PagamentoServiceTest {
     @Captor
     private ArgumentCaptor<Pagamento> pagamentoCaptor;
 
-    private Long idCliente;
+    private UUID idCliente;
     private Long idReserva;
     private Double valor;
 
     @BeforeEach
     void setUp() {
-        idCliente = 1L;
+        idCliente = UUID.randomUUID();
         idReserva = 100L;
         valor = 50.0;
     }
@@ -109,9 +110,9 @@ class PagamentoServiceTest {
 
         assertEquals(mensagemErro, exception.getMessage());
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
-        verify(pagamentoValidation, never()).validarExistenciaReserva(anyLong(), anyLong());
-        verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(anyLong(), anyLong());
-        verify(pagamentoValidation, never()).validarSaldoCliente(anyLong(), anyDouble());
+        verify(pagamentoValidation, never()).validarExistenciaReserva(any(UUID.class), anyLong());
+        verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
+        verify(pagamentoValidation, never()).validarSaldoCliente(any(UUID.class), anyDouble());
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), Optional.ofNullable(any()));
     }
 
@@ -133,8 +134,8 @@ class PagamentoServiceTest {
         assertEquals(mensagemErro, exception.getMessage());
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
-        verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(anyLong(), anyLong());
-        verify(pagamentoValidation, never()).validarSaldoCliente(anyLong(), anyDouble());
+        verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
+        verify(pagamentoValidation, never()).validarSaldoCliente(any(UUID.class), anyDouble());
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), Optional.ofNullable(any()));
     }
 
@@ -183,7 +184,7 @@ class PagamentoServiceTest {
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
         verify(pagamentoValidation, times(1)).validarReservaAtivaOuInativa(idCliente, idReserva);
-        verify(pagamentoValidation, never()).validarSaldoCliente(anyLong(), anyDouble());
+        verify(pagamentoValidation, never()).validarSaldoCliente(any(UUID.class), anyDouble());
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), Optional.ofNullable(any()));
     }
 
@@ -198,9 +199,9 @@ class PagamentoServiceTest {
         Double valor2 = 20.0;
 
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
-        doNothing().when(pagamentoValidation).validarExistenciaReserva(anyLong(), anyLong());
-        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(anyLong(), anyLong());
-        doNothing().when(pagamentoValidation).validarSaldoCliente(anyLong(), anyDouble());
+        doNothing().when(pagamentoValidation).validarExistenciaReserva(any(UUID.class), anyLong());
+        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
+        doNothing().when(pagamentoValidation).validarSaldoCliente(any(UUID.class), anyDouble());
 
         // Act
         pagamentoService.realizarPagamento(idCliente, idReserva1, valor1);
@@ -221,16 +222,16 @@ class PagamentoServiceTest {
     @DisplayName("Deve processar pagamentos para diferentes clientes")
     void deveProcessarPagamentosParaDiferentesClientes() {
         // Arrange
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idReserva1 = 100L;
         Long idReserva2 = 200L;
         Double valor = 50.0;
 
-        doNothing().when(clienteValidation).validarBuscaPorCliente(anyLong());
-        doNothing().when(pagamentoValidation).validarExistenciaReserva(anyLong(), anyLong());
-        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(anyLong(), anyLong());
-        doNothing().when(pagamentoValidation).validarSaldoCliente(anyLong(), anyDouble());
+        doNothing().when(clienteValidation).validarBuscaPorCliente(any(UUID.class));
+        doNothing().when(pagamentoValidation).validarExistenciaReserva(any(UUID.class), anyLong());
+        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
+        doNothing().when(pagamentoValidation).validarSaldoCliente(any(UUID.class), anyDouble());
 
         // Act
         pagamentoService.realizarPagamento(idCliente1, idReserva1, valor);
@@ -266,7 +267,7 @@ class PagamentoServiceTest {
     @DisplayName("Deve criar objeto Pagamento com todos os dados corretos")
     void deveCriarObjetoPagamentoComTodosDadosCorretos() {
         // Arrange
-        Long idClienteEspecifico = 999L;
+        UUID idClienteEspecifico = UUID.randomUUID();
         Long idReservaEspecifica = 888L;
         Double valorEspecifico = 123.45;
 

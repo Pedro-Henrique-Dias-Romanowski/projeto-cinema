@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class PagamentoService {
 
@@ -24,7 +26,7 @@ public class PagamentoService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void realizarPagamento(Long idCliente, Long idReserva, Double valor){
+    public void realizarPagamento(UUID idCliente, Long idReserva, Double valor){
         logger.info("Iniciando pagamento para o cliente com id: {} e reserva com id: {}", idCliente, idReserva);
         clienteValidation.validarBuscaPorCliente(idCliente);
         pagamentoValidation.validarExistenciaReserva(idCliente, idReserva);

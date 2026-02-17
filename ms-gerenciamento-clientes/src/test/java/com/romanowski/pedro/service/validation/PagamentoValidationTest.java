@@ -18,6 +18,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -35,7 +36,7 @@ class PagamentoValidationTest {
     @InjectMocks
     private PagamentoValidation pagamentoValidation;
 
-    private Long idCliente;
+    private UUID idCliente;
     private Long idReserva;
     private Double valor;
     private Cliente cliente;
@@ -48,7 +49,7 @@ class PagamentoValidationTest {
         ReflectionTestUtils.setField(pagamentoValidation, "mensagemSaldoInsuficiente", "Saldo insuficiente para realizar o pagamento");
         ReflectionTestUtils.setField(pagamentoValidation, "mensagemReservaInativa", "Reserva inativa");
 
-        idCliente = 1L;
+        idCliente = UUID.randomUUID();
         idReserva = 100L;
         valor = 50.0;
 
@@ -100,9 +101,10 @@ class PagamentoValidationTest {
     @DisplayName("Deve lançar ReservaInexistenteException quando idCliente da reserva não corresponde")
     void deveLancarExcecaoQuandoIdClienteNaoCorresponde() {
         // Arrange
+        UUID outroClienteId = UUID.randomUUID();
         ReservaResponseDTO reservaDeOutroCliente = new ReservaResponseDTO(
                 idReserva,
-                2L, // ID de outro cliente
+                outroClienteId, // ID de outro cliente
                 1L,
                 false,
                 true,
@@ -125,7 +127,7 @@ class PagamentoValidationTest {
     @DisplayName("Deve validar apenas quando idCliente corresponde exatamente")
     void deveValidarApenasQuandoIdClienteCorrespondeExatamente() {
         // Arrange
-        Long idClienteCorreto = 5L;
+        UUID idClienteCorreto = UUID.randomUUID();
         ReservaResponseDTO reservaCorreta = new ReservaResponseDTO(
                 idReserva,
                 idClienteCorreto,
@@ -145,8 +147,8 @@ class PagamentoValidationTest {
     @DisplayName("Deve validar reserva para diferentes clientes")
     void deveValidarReservaParaDiferentesClientes() {
         // Arrange
-        Long idCliente1 = 1L;
-        Long idCliente2 = 2L;
+        UUID idCliente1 = UUID.randomUUID();
+        UUID idCliente2 = UUID.randomUUID();
         Long idReserva1 = 100L;
         Long idReserva2 = 200L;
 
@@ -168,7 +170,7 @@ class PagamentoValidationTest {
     @DisplayName("Deve lançar exceção quando Feign Client retorna null")
     void deveLancarExcecaoQuandoFeignClientRetornaNulo() {
         // Arrange
-        when(reservaFeignClient.buscarReservaPorId(anyLong(), anyLong())).thenReturn(null);
+        when(reservaFeignClient.buscarReservaPorId(any(UUID.class), anyLong())).thenReturn(null);
 
         // Act & Assert
         ReservaInexistenteException exception = assertThrows(

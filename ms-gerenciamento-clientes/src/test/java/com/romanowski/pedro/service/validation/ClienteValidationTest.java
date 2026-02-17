@@ -16,6 +16,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -125,13 +126,13 @@ class ClienteValidationTest {
     void deveValidarListagemComSucessoQuandoHaClientes() {
         // Arrange
         Cliente cliente1 = new Cliente();
-        cliente1.setId(1L);
+        cliente1.setId(UUID.randomUUID());
         cliente1.setNome("João Silva");
         cliente1.setEmail("joao.silva@email.com");
         cliente1.setSaldo(100.0);
 
         Cliente cliente2 = new Cliente();
-        cliente2.setId(2L);
+        cliente2.setId(UUID.randomUUID());
         cliente2.setNome("Maria Santos");
         cliente2.setEmail("maria.santos@email.com");
         cliente2.setSaldo(200.0);
@@ -166,7 +167,7 @@ class ClienteValidationTest {
     void deveValidarListagemComApenasUmCliente() {
         // Arrange
         Cliente cliente = new Cliente();
-        cliente.setId(1L);
+        cliente.setId(UUID.randomUUID());
         cliente.setNome("João Silva");
         cliente.setEmail("joao.silva@email.com");
         cliente.setSaldo(100.0);
@@ -199,7 +200,7 @@ class ClienteValidationTest {
     @DisplayName("Deve validar busca por cliente com sucesso quando cliente existe")
     void deveValidarBuscaPorClienteComSucesso() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
         when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.of(cliente));
 
@@ -212,7 +213,7 @@ class ClienteValidationTest {
     @DisplayName("Deve lançar ClienteInexistenteException quando cliente não existe")
     void deveLancarExcecaoQuandoClienteNaoExiste() {
         // Arrange
-        Long clienteId = 999L;
+        UUID clienteId = UUID.randomUUID();
         ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
         when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.empty());
 
@@ -227,23 +228,6 @@ class ClienteValidationTest {
         verify(clienteRepository, times(1)).findById(clienteId);
     }
 
-    @Test
-    @DisplayName("Deve lançar exceção ao validar busca por cliente inexistente com ID zero")
-    void deveLancarExcecaoAoValidarBuscaPorClienteComIdZero() {
-        // Arrange
-        Long clienteId = 0L;
-        ReflectionTestUtils.setField(clienteValidation, "mensagemClienteInexistente", "Cliente não encontrado no sistema");
-        when(clienteRepository.findById(clienteId)).thenReturn(java.util.Optional.empty());
-
-        // Act & Assert
-        com.romanowski.pedro.exceptions.ClienteInexistenteException exception = assertThrows(
-                com.romanowski.pedro.exceptions.ClienteInexistenteException.class,
-                () -> clienteValidation.validarBuscaPorCliente(clienteId)
-        );
-
-        assertNotNull(exception);
-        assertEquals("Cliente não encontrado no sistema", exception.getMessage());
-    }
 
 }
 

@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class PagamentoValidation {
 
@@ -34,7 +36,7 @@ public class PagamentoValidation {
         this.clienteRepository = clienteRepository;
     }
 
-    public void validarExistenciaReserva(Long idCliente, Long idReserva) {
+    public void validarExistenciaReserva(UUID idCliente, Long idReserva) {
         ReservaResponseDTO reservaResponseDTO = reservaFeignClient.buscarReservaPorId(idCliente, idReserva);
         if (reservaResponseDTO == null || !reservaResponseDTO.idCliente().equals(idCliente)) {
             logger.error("Reserva com id {} para o cliente com id {} não encontrada", idReserva, idCliente);
@@ -42,7 +44,7 @@ public class PagamentoValidation {
         }
     }
 
-    public void validarReservaAtivaOuInativa(Long idCliente, Long idReserva) {
+    public void validarReservaAtivaOuInativa(UUID idCliente, Long idReserva) {
         ReservaResponseDTO reservaResponseDTO = reservaFeignClient.buscarReservaPorId(idCliente, idReserva);
         if (!reservaResponseDTO.ativa()) {
             logger.error("Reserva com id {} para o cliente com id {} está inativa", idReserva, idCliente);
@@ -50,7 +52,7 @@ public class PagamentoValidation {
         }
     }
 
-    public void validarSaldoCliente(Long idCliente, Double valor){
+    public void validarSaldoCliente(UUID idCliente, Double valor){
         var cliente = clienteRepository.findById(idCliente).orElseThrow();
         if (cliente.getSaldo() < valor){
             logger.error("Saldo insuficiente para o cliente com id {}", idCliente);

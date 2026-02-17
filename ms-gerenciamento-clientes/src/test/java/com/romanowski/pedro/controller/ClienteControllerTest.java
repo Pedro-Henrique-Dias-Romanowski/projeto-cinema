@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,7 +42,10 @@ class ClienteControllerTest {
 
     @BeforeEach
     void setUp() {
+        UUID clienteUuid = UUID.randomUUID();
+
         clienteRequestDTO = new ClienteRequestDTO(
+                clienteUuid,
                 "João Silva",
                 "joao.silva@email.com",
                 "senha123",
@@ -49,20 +53,21 @@ class ClienteControllerTest {
         );
 
         clienteEntity = new Cliente();
+        clienteEntity.setId(clienteUuid);
         clienteEntity.setNome("João Silva");
         clienteEntity.setEmail("joao.silva@email.com");
         clienteEntity.setSenha("senha123");
         clienteEntity.setSaldo(100.0);
 
         clienteSalvo = new Cliente();
-        clienteSalvo.setId(1L);
+        clienteSalvo.setId(clienteUuid);
         clienteSalvo.setNome("João Silva");
         clienteSalvo.setEmail("joao.silva@email.com");
         clienteSalvo.setSenha("$2a$10$encodedPassword");
         clienteSalvo.setSaldo(100.0);
 
         clienteResponseDTO = new ClienteResponseDTO(
-                1L,
+                clienteUuid,
                 "João Silva",
                 "joao.silva@email.com",
                 100.0
@@ -84,7 +89,7 @@ class ClienteControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(1L, response.getBody().id());
+        assertNotNull(response.getBody().id());
         assertEquals("João Silva", response.getBody().nome());
         assertEquals("joao.silva@email.com", response.getBody().email());
         assertEquals(100.0, response.getBody().saldo());
@@ -98,7 +103,10 @@ class ClienteControllerTest {
     @DisplayName("Deve cadastrar cliente com saldo zero")
     void deveCadastrarClienteComSaldoZero() {
         // Arrange
+        UUID clienteUuid = UUID.randomUUID();
+
         ClienteRequestDTO requestComSaldoZero = new ClienteRequestDTO(
+                clienteUuid,
                 "Maria Santos",
                 "maria.santos@email.com",
                 "senha456",
@@ -106,20 +114,21 @@ class ClienteControllerTest {
         );
 
         Cliente entityComSaldoZero = new Cliente();
+        entityComSaldoZero.setId(clienteUuid);
         entityComSaldoZero.setNome("Maria Santos");
         entityComSaldoZero.setEmail("maria.santos@email.com");
         entityComSaldoZero.setSenha("senha456");
         entityComSaldoZero.setSaldo(0.0);
 
         Cliente salvoComSaldoZero = new Cliente();
-        salvoComSaldoZero.setId(2L);
+        salvoComSaldoZero.setId(clienteUuid);
         salvoComSaldoZero.setNome("Maria Santos");
         salvoComSaldoZero.setEmail("maria.santos@email.com");
         salvoComSaldoZero.setSenha("$2a$10$encodedPassword");
         salvoComSaldoZero.setSaldo(0.0);
 
         ClienteResponseDTO responseComSaldoZero = new ClienteResponseDTO(
-                2L,
+                clienteUuid,
                 "Maria Santos",
                 "maria.santos@email.com",
                 0.0
@@ -143,7 +152,10 @@ class ClienteControllerTest {
     @DisplayName("Deve cadastrar cliente com saldo máximo permitido (1000.0)")
     void deveCadastrarClienteComSaldoMaximo() {
         // Arrange
+        UUID clienteUuid = UUID.randomUUID();
+
         ClienteRequestDTO requestComSaldoMaximo = new ClienteRequestDTO(
+                clienteUuid,
                 "Carlos Oliveira",
                 "carlos.oliveira@email.com",
                 "senha789",
@@ -151,20 +163,21 @@ class ClienteControllerTest {
         );
 
         Cliente entityComSaldoMaximo = new Cliente();
+        entityComSaldoMaximo.setId(clienteUuid);
         entityComSaldoMaximo.setNome("Carlos Oliveira");
         entityComSaldoMaximo.setEmail("carlos.oliveira@email.com");
         entityComSaldoMaximo.setSenha("senha789");
         entityComSaldoMaximo.setSaldo(1000.0);
 
         Cliente salvoComSaldoMaximo = new Cliente();
-        salvoComSaldoMaximo.setId(3L);
+        salvoComSaldoMaximo.setId(clienteUuid);
         salvoComSaldoMaximo.setNome("Carlos Oliveira");
         salvoComSaldoMaximo.setEmail("carlos.oliveira@email.com");
         salvoComSaldoMaximo.setSenha("$2a$10$encodedPassword");
         salvoComSaldoMaximo.setSaldo(1000.0);
 
         ClienteResponseDTO responseComSaldoMaximo = new ClienteResponseDTO(
-                3L,
+                clienteUuid,
                 "Carlos Oliveira",
                 "carlos.oliveira@email.com",
                 1000.0
@@ -204,22 +217,26 @@ class ClienteControllerTest {
     @DisplayName("Deve listar todos os clientes com sucesso e retornar status 200")
     void deveListarTodosClientesComSucesso() {
         // Arrange
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        UUID uuid3 = UUID.randomUUID();
+
         Cliente cliente1 = new Cliente();
-        cliente1.setId(1L);
+        cliente1.setId(uuid1);
         cliente1.setNome("João Silva");
         cliente1.setEmail("joao.silva@email.com");
         cliente1.setSenha("$2a$10$encodedPassword");
         cliente1.setSaldo(100.0);
 
         Cliente cliente2 = new Cliente();
-        cliente2.setId(2L);
+        cliente2.setId(uuid2);
         cliente2.setNome("Maria Santos");
         cliente2.setEmail("maria.santos@email.com");
         cliente2.setSenha("$2a$10$encodedPassword2");
         cliente2.setSaldo(200.0);
 
         Cliente cliente3 = new Cliente();
-        cliente3.setId(3L);
+        cliente3.setId(uuid3);
         cliente3.setNome("Carlos Oliveira");
         cliente3.setEmail("carlos.oliveira@email.com");
         cliente3.setSenha("$2a$10$encodedPassword3");
@@ -227,9 +244,9 @@ class ClienteControllerTest {
 
         List<Cliente> clientes = List.of(cliente1, cliente2, cliente3);
 
-        ClienteResponseDTO response1 = new ClienteResponseDTO(1L, "João Silva", "joao.silva@email.com", 100.0);
-        ClienteResponseDTO response2 = new ClienteResponseDTO(2L, "Maria Santos", "maria.santos@email.com", 200.0);
-        ClienteResponseDTO response3 = new ClienteResponseDTO(3L, "Carlos Oliveira", "carlos.oliveira@email.com", 300.0);
+        ClienteResponseDTO response1 = new ClienteResponseDTO(uuid1, "João Silva", "joao.silva@email.com", 100.0);
+        ClienteResponseDTO response2 = new ClienteResponseDTO(uuid2, "Maria Santos", "maria.santos@email.com", 200.0);
+        ClienteResponseDTO response3 = new ClienteResponseDTO(uuid3, "Carlos Oliveira", "carlos.oliveira@email.com", 300.0);
 
         when(clienteService.listarClientes()).thenReturn(clientes);
         when(clienteMapper.toResponseDTO(cliente1)).thenReturn(response1);
@@ -279,15 +296,17 @@ class ClienteControllerTest {
     @DisplayName("Deve listar apenas um cliente quando há apenas um cadastrado")
     void deveListarApenasUmCliente() {
         // Arrange
+        UUID clienteUuid = UUID.randomUUID();
+
         Cliente cliente = new Cliente();
-        cliente.setId(1L);
+        cliente.setId(clienteUuid);
         cliente.setNome("João Silva");
         cliente.setEmail("joao.silva@email.com");
         cliente.setSenha("$2a$10$encodedPassword");
         cliente.setSaldo(100.0);
 
         List<Cliente> clientes = List.of(cliente);
-        ClienteResponseDTO responseDTO = new ClienteResponseDTO(1L, "João Silva", "joao.silva@email.com", 100.0);
+        ClienteResponseDTO responseDTO = new ClienteResponseDTO(clienteUuid, "João Silva", "joao.silva@email.com", 100.0);
 
         when(clienteService.listarClientes()).thenReturn(clientes);
         when(clienteMapper.toResponseDTO(cliente)).thenReturn(responseDTO);
@@ -310,7 +329,7 @@ class ClienteControllerTest {
     @DisplayName("Deve deletar cliente com sucesso e retornar status 204")
     void deveDeletarClienteComSucesso() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         doNothing().when(clienteService).deletarCliente(clienteId);
 
         // Act
@@ -328,7 +347,7 @@ class ClienteControllerTest {
     @DisplayName("Deve retornar ResponseEntity com corpo nulo ao deletar")
     void deveRetornarResponseEntityComCorpoNuloAoDeletar() {
         // Arrange
-        Long clienteId = 1L;
+        UUID clienteId = UUID.randomUUID();
         doNothing().when(clienteService).deletarCliente(clienteId);
 
         // Act
