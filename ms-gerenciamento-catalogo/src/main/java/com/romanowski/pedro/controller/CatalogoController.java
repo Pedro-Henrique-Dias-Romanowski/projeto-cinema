@@ -9,6 +9,7 @@ import com.romanowski.pedro.mapper.FilmeMapper;
 import com.romanowski.pedro.service.FilmeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +29,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilmeResponseDTO> cadastrarFilme(FilmeRequestDTO filmeRequestDTO) {
         Filme filmeEntity = filmeMapper.toEntity(filmeRequestDTO);
         Filme filmeSalvo = filmeService.cadastrarFilme(filmeEntity);
@@ -35,6 +37,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilmeResponseDTO>> listarFilmes() {
         List<Filme> filmes = filmeService.listarFilmes();
         List<FilmeResponseDTO> filmeResponseDTOs = filmes.stream().map(filmeMapper::toResponseDTO).toList();
@@ -42,18 +45,21 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilmeResponseDTO> buscarFilmePorId(Long id) {
         Optional<Filme> filme = filmeService.buscarFilmePorId(id);
         return ResponseEntity.status(HttpStatus.OK).body(filmeMapper.toResponseDTO(filme.orElse(null)));
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilmeResponseDTO> buscarFilmePorTitulo(String titulo) {
         Optional<Filme> filme = filmeService.buscarFilmePorTitulo(titulo);
         return ResponseEntity.status(HttpStatus.OK).body(filmeMapper.toResponseDTO(filme.orElse(null)));
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilmeResponseDTO> atualizarFilme(Long id, FilmeAtualizacaoRequestDTO filmeAtualizacaoRequestDTO) {
         Filme filmeParaSerAtualizado = filmeMapper.toEntity(filmeAtualizacaoRequestDTO);
         Filme filmeAtualizado = filmeService.atualizarFilme(id, filmeParaSerAtualizado);
@@ -61,6 +67,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarFilme(Long id) {
         filmeService.deletarFilme(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);

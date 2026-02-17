@@ -16,15 +16,14 @@ spring:
       hibernate:
     show-sql: false
     open-in-view: false
-  spring:
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            secret-key: ${JWT_SECRET:123456789}
+  security:
+    jwt:
+      secret: ${JWT_SECRET:fT8X27NnYKddsmTlJMIbwf2XvXPvBHdEP4C1iI4qZSU=}
 springdoc:
-  api-docs:
-    path: /book-service/v3/api-docs
   swagger-ui:
-    url: /book-service/v3/api-docs
-  override-server-url: true
+    path: /swagger-ui.html
+    enabled: true
+    use-root-path: false
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
