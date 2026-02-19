@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+URL_RESERVA_SERVICE: http://localhost:8081
+
+logging:
+    level:
+      org.springframework.security: DEBUG
+
+spring:
+  application:
+    name:
+      ms-gerenciamento-clientes
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cinema_clientes
+    username: root
+    password: 121105
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+    show-sql: false
+    open-in-view: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USER:pedro.romanowski02@gmail.com}
+    password: ${MAIL_PASSWORD:vfvfrjgeoogkvigb}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  security:
+    jwt:
+      secret: ${JWT_SECRET:fT8X27NnYKddsmTlJMIbwf2XvXPvBHdEP4C1iI4qZSU=}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    use-root-path: false
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
