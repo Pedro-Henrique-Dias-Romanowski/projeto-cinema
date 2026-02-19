@@ -1,0 +1,40 @@
+# Arquivos de build
+target/
+*.class
+*.jar
+!target/*.jar
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Test reports
+surefire-reports/
+
+# Documentation
+README.md
+docs/
+
+# Environment
+.env
+.env.local
+
