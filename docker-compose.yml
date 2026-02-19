@@ -1,0 +1,233 @@
+services:
+  # Banco de dados MySQL para Autenticação
+  mysql-autenticacao:
+    image: mysql:8.0
+    container_name: mysql-autenticacao
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME_AUTENTICACAO}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-autenticacao-data:/var/lib/mysql
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Banco de dados MySQL para Catálogo
+  mysql-catalogo:
+    image: mysql:8.0
+    container_name: mysql-catalogo
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME_CATALOGO}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-catalogo-data:/var/lib/mysql
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Banco de dados MySQL para Clientes
+  mysql-clientes:
+    image: mysql:8.0
+    container_name: mysql-clientes
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME_CLIENTES}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-clientes-data:/var/lib/mysql
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Banco de dados MySQL para Sessões
+  mysql-sessoes:
+    image: mysql:8.0
+    container_name: mysql-sessoes
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME_SESSOES}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql-sessoes-data:/var/lib/mysql
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Microserviço de Autenticação
+  ms-autenticacao:
+    build:
+      context: ./ms-autenticacao-cinema
+      dockerfile: Dockerfile
+    container_name: ms-autenticacao-cinema
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST_AUTENTICACAO: mysql-autenticacao
+      DB_PORT: 3306
+      DB_NAME_AUTENTICACAO: ${DB_NAME_AUTENTICACAO}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      URL_CLIENTE_SERVICE: http://ms-clientes:8080
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql-autenticacao:
+        condition: service_healthy
+      ms-clientes:
+        condition: service_started
+    networks:
+      - cinema-network
+    restart: on-failure
+
+  # Microserviço de Catálogo
+  ms-catalogo:
+    build:
+      context: ./ms-gerenciamento-catalogo
+      dockerfile: Dockerfile
+    container_name: ms-gerenciamento-catalogo
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST_CATALOGO: mysql-catalogo
+      DB_PORT: 3306
+      DB_NAME_CATALOGO: ${DB_NAME_CATALOGO}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql-catalogo:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: on-failure
+
+  # Microserviço de Clientes
+  ms-clientes:
+    build:
+      context: ./ms-gerenciamento-clientes
+      dockerfile: Dockerfile
+    container_name: ms-gerenciamento-clientes
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST_CLIENTES: mysql-clientes
+      DB_PORT: 3306
+      DB_NAME_CLIENTES: ${DB_NAME_CLIENTES}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      URL_RESERVA_SERVICE: http://ms-sessoes:8081
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-clientes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: on-failure
+
+  # Microserviço de Sessões
+  ms-sessoes:
+    build:
+      context: ./ms-gerenciamento-sessoes
+      dockerfile: Dockerfile
+    container_name: ms-gerenciamento-sessoes
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST_SESSOES: mysql-sessoes
+      DB_PORT: 3306
+      DB_NAME_SESSOES: ${DB_NAME_SESSOES}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      URL_CATALOGO_SERVICE: http://ms-catalogo:8082
+      URL_CLIENTE_SERVICE: http://ms-clientes:8080
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql-sessoes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ms-catalogo:
+        condition: service_started
+      ms-clientes:
+        condition: service_started
+    networks:
+      - cinema-network
+    restart: on-failure
+
+volumes:
+  mysql-autenticacao-data:
+  mysql-catalogo-data:
+  mysql-clientes-data:
+  mysql-sessoes-data:
+  rabbitmq-data:
+
+networks:
+  cinema-network:
+    driver: bridge
