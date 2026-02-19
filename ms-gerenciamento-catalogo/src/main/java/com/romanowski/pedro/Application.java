@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("classpath:messages/global.properties")
 public class Application {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
