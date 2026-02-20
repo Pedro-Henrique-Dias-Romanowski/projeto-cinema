@@ -37,7 +37,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'ADMIN')")
     public ResponseEntity<List<FilmeResponseDTO>> listarFilmes() {
         List<Filme> filmes = filmeService.listarFilmes();
         List<FilmeResponseDTO> filmeResponseDTOs = filmes.stream().map(filmeMapper::toResponseDTO).toList();
@@ -45,7 +45,7 @@ public class CatalogoController implements SwaggerFilmeController {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'ADMIN')")
     public ResponseEntity<FilmeResponseDTO> buscarFilmePorId(Long id) {
         Optional<Filme> filme = filmeService.buscarFilmePorId(id);
         return ResponseEntity.status(HttpStatus.OK).body(filmeMapper.toResponseDTO(filme.orElse(null)));
