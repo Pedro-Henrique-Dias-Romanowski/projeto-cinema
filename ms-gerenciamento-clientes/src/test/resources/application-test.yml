@@ -2,6 +2,9 @@
 URL_RESERVA_SERVICE: http://localhost:8081
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
   flyway:
     enabled: false
   datasource:
@@ -16,11 +19,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
   security:
     jwt:
       secret: test-secret-key-for-testing-only
