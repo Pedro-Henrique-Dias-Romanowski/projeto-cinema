@@ -1,1 +1,1 @@
-ALTER TABLE SESSOES add COLUMN titulo_filme varchar(250) NOT NULL AFTER id_filme;
+ALTER TABLE sessoes add COLUMN titulo_filme varchar(250) NOT NULL AFTER id_filme;
