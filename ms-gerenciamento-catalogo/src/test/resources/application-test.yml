@@ -1,4 +1,7 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
   flyway:
     enabled: false
   datasource:
