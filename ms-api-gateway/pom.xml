@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.romanowski.pedro</groupId>
-    <artifactId>ms-api-gateway</artifactId>
+    <artifactId>api-gateway-cinema</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ms-api-gateway</name>
-    <description>ms-api-gateway</description>
+    <name>api-gateway</name>
+    <description>api-gateway</description>
     <properties>
         <java.version>21</java.version>
         <spring-cloud.version>2025.1.0</spring-cloud.version>
