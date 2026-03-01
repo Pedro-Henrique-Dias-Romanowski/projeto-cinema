@@ -4,6 +4,10 @@ server:
 URL_CATALOGO_SERVICE: http://localhost:8082
 URL_CLIENTE_SERVICE: http://localhost:8080
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
 spring:
   application:
     name:
