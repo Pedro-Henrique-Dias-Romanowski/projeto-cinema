@@ -6,6 +6,7 @@ spring:
   cloud:
     gateway:
       routes:
+        # Rotas de API
         - id: autenticacao
           uri: http://ms-autenticacao:8084
           predicates:
@@ -35,6 +36,35 @@ spring:
             - RewritePath=/sessoes/(?<segment>.*), /v1/sessoes/${segment}
             - RewritePath=/reservas/(?<segment>.*), /v1/reservas/${segment}
 
+        # Rotas para Swagger API Docs
+        - id: autenticacao-docs
+          uri: http://ms-autenticacao:8084
+          predicates:
+            - Path=/auth/v3/api-docs
+          filters:
+            - RewritePath=/auth/v3/api-docs, /v3/api-docs
+
+        - id: catalogo-docs
+          uri: http://ms-catalogo:8082
+          predicates:
+            - Path=/filmes/v3/api-docs
+          filters:
+            - RewritePath=/filmes/v3/api-docs, /v3/api-docs
+
+        - id: clientes-docs
+          uri: http://ms-clientes:8080
+          predicates:
+            - Path=/clientes/v3/api-docs
+          filters:
+            - RewritePath=/clientes/v3/api-docs, /v3/api-docs
+
+        - id: sessoes-docs
+          uri: http://ms-sessoes:8081
+          predicates:
+            - Path=/sessoes/v3/api-docs
+          filters:
+            - RewritePath=/sessoes/v3/api-docs, /v3/api-docs
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -49,10 +79,8 @@ springdoc:
       - name: Sessões API
         url: /sessoes/v3/api-docs
     urls-primary-name: Autenticação API
-
-    api-docs:
-      # Habilita geração de docs
-      enabled: true
+  api-docs:
+    enabled: true
 eureka:
   client:
     register-with-eureka: true
