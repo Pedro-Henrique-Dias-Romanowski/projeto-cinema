@@ -1,3 +1,9 @@
+server:
+  port: 8085
 spring:
   application:
     name: ms-api-gateway
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
