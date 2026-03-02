@@ -3,6 +3,56 @@ server:
 spring:
   application:
     name: ms-api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: autenticacao
+          uri: http://ms-autenticacao:8084
+          predicates:
+            - Path=/auth/**
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /v1/auth/${segment}
+
+        - id: catalogo
+          uri: http://ms-catalogo:8082
+          predicates:
+            - Path=/filmes/**
+          filters:
+            - RewritePath=/filmes/(?<segment>.*), /v1/filmes/${segment}
+
+        - id: clientes
+          uri: http://ms-clientes:8080
+          predicates:
+            - Path=/clientes/**
+          filters:
+            - RewritePath=/clientes/(?<segment>.*), /v1/clientes/${segment}
+
+        - id: sessoes
+          uri: http://ms-sessoes:8081
+          predicates:
+            - Path=/sessoes/**,/reservas/**
+          filters:
+            - RewritePath=/sessoes/(?<segment>.*), /v1/sessoes/${segment}
+            - RewritePath=/reservas/(?<segment>.*), /v1/reservas/${segment}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    urls:
+      - name: Autenticação API
+        url: /auth/v3/api-docs
+      - name: Catálogo API
+        url: /filmes/v3/api-docs
+      - name: Clientes API
+        url: /clientes/v3/api-docs
+      - name: Sessões API
+        url: /sessoes/v3/api-docs
+    urls-primary-name: Autenticação API
+
+    api-docs:
+      # Habilita geração de docs
+      enabled: true
 eureka:
   client:
     register-with-eureka: true
