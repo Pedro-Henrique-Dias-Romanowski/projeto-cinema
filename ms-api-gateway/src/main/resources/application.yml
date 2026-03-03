@@ -6,64 +6,77 @@ spring:
   cloud:
     gateway:
       routes:
+        # Rotas para Swagger API Docs (order menor = maior prioridade)
+        - id: autenticacao-docs
+          uri: lb://ms-autenticacao-cinema
+          order: -1
+          predicates:
+            - Path=/auth/v3/api-docs
+          filters:
+            - RewritePath=/auth/v3/api-docs, /v3/api-docs
+            - RemoveRequestHeader=Authorization
+
+        - id: catalogo-docs
+          uri: lb://ms-gerenciamento-catalogo
+          order: -1
+          predicates:
+            - Path=/filmes/v3/api-docs
+          filters:
+            - RewritePath=/filmes/v3/api-docs, /v3/api-docs
+            - RemoveRequestHeader=Authorization
+
+        - id: clientes-docs
+          uri: lb://ms-gerenciamento-clientes
+          order: -1
+          predicates:
+            - Path=/clientes/v3/api-docs
+          filters:
+            - RewritePath=/clientes/v3/api-docs, /v3/api-docs
+            - RemoveRequestHeader=Authorization
+
+        - id: sessoes-docs
+          uri: lb://ms-gerenciamento-sessoes
+          order: -1
+          predicates:
+            - Path=/sessoes/v3/api-docs
+          filters:
+            - RewritePath=/sessoes/v3/api-docs, /v3/api-docs
+            - RemoveRequestHeader=Authorization
+
         # Rotas de API
         - id: autenticacao
-          uri: http://ms-autenticacao:8084
+          uri: lb://ms-autenticacao-cinema
+          order: 0
           predicates:
             - Path=/auth/**
           filters:
             - RewritePath=/auth/(?<segment>.*), /v1/auth/${segment}
 
         - id: catalogo
-          uri: http://ms-catalogo:8082
+          uri: lb://ms-gerenciamento-catalogo
+          order: 0
           predicates:
             - Path=/filmes/**
           filters:
             - RewritePath=/filmes/(?<segment>.*), /v1/filmes/${segment}
 
         - id: clientes
-          uri: http://ms-clientes:8080
+          uri: lb://ms-gerenciamento-clientes
+          order: 0
           predicates:
             - Path=/clientes/**
           filters:
             - RewritePath=/clientes/(?<segment>.*), /v1/clientes/${segment}
 
         - id: sessoes
-          uri: http://ms-sessoes:8081
+          uri: lb://ms-gerenciamento-sessoes
+          order: 0
           predicates:
             - Path=/sessoes/**,/reservas/**
           filters:
             - RewritePath=/sessoes/(?<segment>.*), /v1/sessoes/${segment}
             - RewritePath=/reservas/(?<segment>.*), /v1/reservas/${segment}
 
-        # Rotas para Swagger API Docs
-        - id: autenticacao-docs
-          uri: http://ms-autenticacao:8084
-          predicates:
-            - Path=/auth/v3/api-docs
-          filters:
-            - RewritePath=/auth/v3/api-docs, /v3/api-docs
-
-        - id: catalogo-docs
-          uri: http://ms-catalogo:8082
-          predicates:
-            - Path=/filmes/v3/api-docs
-          filters:
-            - RewritePath=/filmes/v3/api-docs, /v3/api-docs
-
-        - id: clientes-docs
-          uri: http://ms-clientes:8080
-          predicates:
-            - Path=/clientes/v3/api-docs
-          filters:
-            - RewritePath=/clientes/v3/api-docs, /v3/api-docs
-
-        - id: sessoes-docs
-          uri: http://ms-sessoes:8081
-          predicates:
-            - Path=/sessoes/v3/api-docs
-          filters:
-            - RewritePath=/sessoes/v3/api-docs, /v3/api-docs
 
 springdoc:
   swagger-ui:
