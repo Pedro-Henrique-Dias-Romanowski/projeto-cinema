@@ -96,7 +96,7 @@ spring:
           predicates:
             - Path=/auth/**
           filters:
-            - RewritePath=/auth/(?<segment>.*), /v1/auth/${segment}
+            - RewritePath=/auth(?<segment>.*), /v1/auth${segment}
 
         - id: catalogo
           uri: lb://ms-gerenciamento-catalogo
@@ -104,7 +104,7 @@ spring:
           predicates:
             - Path=/filmes/**
           filters:
-            - RewritePath=/filmes/(?<segment>.*), /v1/filmes/${segment}
+            - RewritePath=/filmes(?<segment>.*), /v1/filmes${segment}
 
         - id: clientes
           uri: lb://ms-gerenciamento-clientes
@@ -112,7 +112,7 @@ spring:
           predicates:
             - Path=/clientes/**
           filters:
-            - RewritePath=/clientes/(?<segment>.*), /v1/clientes/${segment}
+            - RewritePath=/clientes(?<segment>.*), /v1/clientes${segment}
 
         - id: sessoes
           uri: lb://ms-gerenciamento-sessoes
@@ -120,8 +120,8 @@ spring:
           predicates:
             - Path=/sessoes/**,/reservas/**
           filters:
-            - RewritePath=/sessoes/(?<segment>.*), /v1/sessoes/${segment}
-            - RewritePath=/reservas/(?<segment>.*), /v1/reservas/${segment}
+            - RewritePath=/sessoes(?<segment>.*), /v1/sessoes${segment}
+            - RewritePath=/reservas(?<segment>.*), /v1/reservas${segment}
 
 
 springdoc:
