@@ -10,7 +10,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8761"]
       interval: 10s
       timeout: 5s
       retries: 5
