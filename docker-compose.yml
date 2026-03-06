@@ -1,4 +1,38 @@
 services:
+  # Service Discovery (Eureka)
+  service-discovery:
+    build:
+      context: ./service-discovery-cinema
+      dockerfile: Dockerfile
+    container_name: service-discovery-cinema
+    ports:
+      - "8761:8761"
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./ms-api-gateway
+      dockerfile: Dockerfile
+    container_name: ms-api-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+    ports:
+      - "8085:8085"
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    restart: on-failure
+
   # Banco de dados MySQL para Autenticação
   mysql-autenticacao:
     image: mysql:8.0
@@ -118,9 +152,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
     ports:
       - "8084:8084"
     depends_on:
+      service-discovery:
+        condition: service_healthy
       mysql-autenticacao:
         condition: service_healthy
       ms-clientes:
@@ -143,9 +180,12 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
     ports:
       - "8082:8082"
     depends_on:
+      service-discovery:
+        condition: service_healthy
       mysql-catalogo:
         condition: service_healthy
     networks:
@@ -173,9 +213,12 @@ services:
       MAIL_USER: ${MAIL_USER}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_RESERVA_SERVICE: http://ms-sessoes:8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
     ports:
       - "8080:8080"
     depends_on:
+      service-discovery:
+        condition: service_healthy
       mysql-clientes:
         condition: service_healthy
       rabbitmq:
@@ -206,9 +249,12 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_CATALOGO_SERVICE: http://ms-catalogo:8082
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
     ports:
       - "8081:8081"
     depends_on:
+      service-discovery:
+        condition: service_healthy
       mysql-sessoes:
         condition: service_healthy
       rabbitmq:

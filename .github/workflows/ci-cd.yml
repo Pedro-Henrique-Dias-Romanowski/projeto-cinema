@@ -35,6 +35,14 @@ jobs:
       working-directory: ./ms-gerenciamento-sessoes
       run: mvn clean package
 
+    - name: Build and Test api-gateway with Maven
+      working-directory: ./ms-api-gateway
+      run: mvn clean package
+
+    - name: Build and Test service-discovery with Maven
+      working-directory: ./service-discovery-cinema
+      run: mvn clean package    
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
@@ -47,6 +55,8 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-catalogo:latest ./ms-gerenciamento-catalogo
         docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-clientes:latest ./ms-gerenciamento-clientes
         docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:latest ./ms-gerenciamento-sessoes
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest ./service-discovery-cinema
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest ./ms-api-gateway
 
     - name: Tag Docker Images with Run ID
       run: |
@@ -54,6 +64,8 @@ jobs:
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-catalogo:latest ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-catalogo:${{ github.run_id }}
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-clientes:latest ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-clientes:${{ github.run_id }}
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:latest ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:${{ github.run_id }}
+        docker tag ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest ${{ secrets.DOCKER_USERNAME }}/service-discovery:${{ github.run_id }}
+        docker tag ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
 
     - name: Push Docker Images to Docker Hub
       run: |
@@ -65,3 +77,9 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-clientes:${{ github.run_id }}
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:${{ github.run_id }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/service-discovery:${{ github.run_id }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
+
+      

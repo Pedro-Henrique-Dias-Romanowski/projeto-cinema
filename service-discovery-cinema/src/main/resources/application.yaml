@@ -1,5 +1,15 @@
 server:
   port: 8761
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
 spring:
   application:
     name: service-discovery-cinema
