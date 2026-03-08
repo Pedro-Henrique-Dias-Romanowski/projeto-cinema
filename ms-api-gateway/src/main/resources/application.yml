@@ -14,9 +14,9 @@ management:
     sampling:
       probability: 1.0
   zipkin:
-    base-url: ${ZIPKIN_BASE_URL:http://zipkin:9411}
+    base-url: ${SPRING_ZIPKIN_BASE_URL:http://zipkin:9411}
     tracing:
-      endpoint: ${ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
+      endpoint: ${SPRING_ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans
 spring:
   application:
     name: ms-api-gateway

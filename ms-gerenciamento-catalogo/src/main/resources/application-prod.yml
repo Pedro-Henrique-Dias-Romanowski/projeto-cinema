@@ -11,16 +11,15 @@ management:
     readinessstate:
       enabled: true
   tracing:
-  sampling:
-    probability: 1.0
+    sampling:
+      probability: 1.0
   zipkin:
-  base-url: ${SPRING_ZIPKIN_BASE_URL}
-  tracing:
-    endpoint: ${SPRING_ZIPKIN_BASE_URL}/api/v2/spans
-  spring:
+    base-url: ${SPRING_ZIPKIN_BASE_URL:http://zipkin:9411}
+    tracing:
+      endpoint: ${SPRING_ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans
+spring:
   application:
-    name:
-      ms-gerenciamento-catalogo
+    name: ms-gerenciamento-catalogo
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST_CATALOGO}:${DB_PORT}/${DB_NAME_CATALOGO}
