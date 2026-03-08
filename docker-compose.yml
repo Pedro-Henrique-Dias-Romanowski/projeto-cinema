@@ -137,6 +137,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Zipkin - Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:9411/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
   # Microserviço de Autenticação
   ms-autenticacao:
     build:
