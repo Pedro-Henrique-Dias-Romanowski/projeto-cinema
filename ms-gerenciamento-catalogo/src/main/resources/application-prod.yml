@@ -11,13 +11,13 @@ management:
     readinessstate:
       enabled: true
   tracing:
-    sampling:
-      probability: 1.0
+  sampling:
+    probability: 1.0
   zipkin:
-    base-url: ${SPRING_ZIPKIN_BASEURL}
-    tracing:
-      endpoint: ${SPRING_ZIPKIN_BASEURL}/api/v2/spans
-spring:
+  base-url: ${SPRING_ZIPKIN_BASE_URL}
+  tracing:
+    endpoint: ${SPRING_ZIPKIN_BASE_URL}/api/v2/spans
+  spring:
   application:
     name:
       ms-gerenciamento-catalogo
