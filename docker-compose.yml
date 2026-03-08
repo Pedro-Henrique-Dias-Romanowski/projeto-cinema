@@ -24,10 +24,13 @@ services:
     container_name: ms-api-gateway
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8085:8085"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - cinema-network
@@ -137,6 +140,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Zipkin - Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:9411/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
   # Microserviço de Autenticação
   ms-autenticacao:
     build:
@@ -153,12 +171,15 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8084:8084"
     depends_on:
       service-discovery:
         condition: service_healthy
       mysql-autenticacao:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
       ms-clientes:
         condition: service_started
@@ -181,12 +202,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8082:8082"
     depends_on:
       service-discovery:
         condition: service_healthy
       mysql-catalogo:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - cinema-network
@@ -214,6 +238,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_RESERVA_SERVICE: http://ms-sessoes:8081
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8080:8080"
     depends_on:
@@ -222,6 +247,8 @@ services:
       mysql-clientes:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - cinema-network
@@ -250,6 +277,7 @@ services:
       URL_CATALOGO_SERVICE: http://ms-catalogo:8082
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8081:8081"
     depends_on:
@@ -258,6 +286,8 @@ services:
       mysql-sessoes:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
       ms-catalogo:
         condition: service_started
