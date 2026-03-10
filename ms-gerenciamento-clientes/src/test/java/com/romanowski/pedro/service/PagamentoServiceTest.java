@@ -1,5 +1,6 @@
 package com.romanowski.pedro.service;
 
+import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.entity.Pagamento;
 import com.romanowski.pedro.exceptions.ClienteInexistenteException;
 import com.romanowski.pedro.exceptions.ReservaInativaException;
@@ -36,6 +37,9 @@ class PagamentoServiceTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
+    @Mock
+    private ClienteService clienteService;
+
     @InjectMocks
     private PagamentoService pagamentoService;
 
@@ -45,20 +49,29 @@ class PagamentoServiceTest {
     private UUID idCliente;
     private Long idReserva;
     private Double valor;
+    private Cliente cliente;
 
     @BeforeEach
     void setUp() {
         idCliente = UUID.randomUUID();
         idReserva = 100L;
         valor = 50.0;
+
+        cliente = new Cliente();
+        cliente.setId(idCliente);
+        cliente.setNome("João Silva");
+        cliente.setEmail("joao.silva@email.com");
+        cliente.setSaldo(100.0);
     }
 
     @Test
     @DisplayName("Deve realizar pagamento com sucesso")
     void deveRealizarPagamentoComSucesso() {
         // Arrange
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
+        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(idCliente, idReserva);
         doNothing().when(pagamentoValidation).validarSaldoCliente(idCliente, valor);
         doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Pagamento.class));
 
@@ -66,18 +79,23 @@ class PagamentoServiceTest {
         pagamentoService.realizarPagamento(idCliente, idReserva, valor);
 
         // Assert
+        verify(clienteService, times(1)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
+        verify(pagamentoValidation, times(1)).validarReservaAtivaOuInativa(idCliente, idReserva);
         verify(pagamentoValidation, times(1)).validarSaldoCliente(idCliente, valor);
         verify(rabbitTemplate, times(1)).convertAndSend(eq("pagamentos.ex"), eq(""), any(Pagamento.class));
+        assertEquals(50.0, cliente.getSaldo(), "Saldo do cliente deve ser atualizado");
     }
 
     @Test
     @DisplayName("Deve enviar pagamento para fila RabbitMQ com dados corretos")
     void deveEnviarPagamentoParaFilaComDadosCorretos() {
         // Arrange
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
+        doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(idCliente, idReserva);
         doNothing().when(pagamentoValidation).validarSaldoCliente(idCliente, valor);
 
         // Act
@@ -99,6 +117,7 @@ class PagamentoServiceTest {
     void deveLancarExcecaoQuandoClienteNaoEncontrado() {
         // Arrange
         String mensagemErro = "Cliente não encontrado";
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doThrow(new ClienteInexistenteException(mensagemErro))
                 .when(clienteValidation).validarBuscaPorCliente(idCliente);
 
@@ -109,6 +128,7 @@ class PagamentoServiceTest {
         );
 
         assertEquals(mensagemErro, exception.getMessage());
+        verify(clienteService, times(1)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, never()).validarExistenciaReserva(any(UUID.class), anyLong());
         verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
@@ -121,6 +141,7 @@ class PagamentoServiceTest {
     void deveLancarExcecaoQuandoReservaNaoExiste() {
         // Arrange
         String mensagemErro = "Reserva não encontrada";
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doThrow(new ReservaInexistenteException(mensagemErro))
                 .when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
@@ -132,6 +153,7 @@ class PagamentoServiceTest {
         );
 
         assertEquals(mensagemErro, exception.getMessage());
+        verify(clienteService, times(1)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
         verify(pagamentoValidation, never()).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
@@ -144,6 +166,7 @@ class PagamentoServiceTest {
     void deveLancarExcecaoQuandoSaldoInsuficiente() {
         // Arrange
         String mensagemErro = "Saldo insuficiente";
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
         doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(idCliente, idReserva);
@@ -157,6 +180,7 @@ class PagamentoServiceTest {
         );
 
         assertEquals(mensagemErro, exception.getMessage());
+        verify(clienteService, times(1)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
         verify(pagamentoValidation, times(1)).validarReservaAtivaOuInativa(idCliente, idReserva);
@@ -169,6 +193,7 @@ class PagamentoServiceTest {
     void deveLancarExcecaoQuandoReservaInativa() {
         // Arrange
         String mensagemErro = "Reserva inativa";
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
         doThrow(new ReservaInativaException(mensagemErro))
@@ -181,6 +206,7 @@ class PagamentoServiceTest {
         );
 
         assertEquals(mensagemErro, exception.getMessage());
+        verify(clienteService, times(1)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva);
         verify(pagamentoValidation, times(1)).validarReservaAtivaOuInativa(idCliente, idReserva);
@@ -198,6 +224,7 @@ class PagamentoServiceTest {
         Double valor1 = 30.0;
         Double valor2 = 20.0;
 
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(any(UUID.class), anyLong());
         doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
@@ -208,6 +235,7 @@ class PagamentoServiceTest {
         pagamentoService.realizarPagamento(idCliente, idReserva2, valor2);
 
         // Assert
+        verify(clienteService, times(2)).buscarClientePorId(idCliente);
         verify(clienteValidation, times(2)).validarBuscaPorCliente(idCliente);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva1);
         verify(pagamentoValidation, times(1)).validarExistenciaReserva(idCliente, idReserva2);
@@ -216,6 +244,7 @@ class PagamentoServiceTest {
         verify(pagamentoValidation, times(1)).validarSaldoCliente(idCliente, valor1);
         verify(pagamentoValidation, times(1)).validarSaldoCliente(idCliente, valor2);
         verify(rabbitTemplate, times(2)).convertAndSend(eq("pagamentos.ex"), eq(""), any(Pagamento.class));
+        assertEquals(50.0, cliente.getSaldo(), "Saldo do cliente deve ser 100 - 30 - 20 = 50");
     }
 
     @Test
@@ -228,6 +257,16 @@ class PagamentoServiceTest {
         Long idReserva2 = 200L;
         Double valor = 50.0;
 
+        Cliente cliente1 = new Cliente();
+        cliente1.setId(idCliente1);
+        cliente1.setSaldo(100.0);
+
+        Cliente cliente2 = new Cliente();
+        cliente2.setId(idCliente2);
+        cliente2.setSaldo(150.0);
+
+        when(clienteService.buscarClientePorId(idCliente1)).thenReturn(Optional.of(cliente1));
+        when(clienteService.buscarClientePorId(idCliente2)).thenReturn(Optional.of(cliente2));
         doNothing().when(clienteValidation).validarBuscaPorCliente(any(UUID.class));
         doNothing().when(pagamentoValidation).validarExistenciaReserva(any(UUID.class), anyLong());
         doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(any(UUID.class), anyLong());
@@ -238,15 +277,20 @@ class PagamentoServiceTest {
         pagamentoService.realizarPagamento(idCliente2, idReserva2, valor);
 
         // Assert
+        verify(clienteService, times(1)).buscarClientePorId(idCliente1);
+        verify(clienteService, times(1)).buscarClientePorId(idCliente2);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente1);
         verify(clienteValidation, times(1)).validarBuscaPorCliente(idCliente2);
         verify(rabbitTemplate, times(2)).convertAndSend(eq("pagamentos.ex"), eq(""), any(Pagamento.class));
+        assertEquals(50.0, cliente1.getSaldo(), "Saldo do cliente1 deve ser atualizado");
+        assertEquals(100.0, cliente2.getSaldo(), "Saldo do cliente2 deve ser atualizado");
     }
 
     @Test
     @DisplayName("Deve enviar pagamento para exchange correto")
     void deveEnviarPagamentoParaExchangeCorreto() {
         // Arrange
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idCliente);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idCliente, idReserva);
         doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(idCliente, idReserva);
@@ -271,6 +315,11 @@ class PagamentoServiceTest {
         Long idReservaEspecifica = 888L;
         Double valorEspecifico = 123.45;
 
+        Cliente clienteEspecifico = new Cliente();
+        clienteEspecifico.setId(idClienteEspecifico);
+        clienteEspecifico.setSaldo(200.0);
+
+        when(clienteService.buscarClientePorId(idClienteEspecifico)).thenReturn(Optional.of(clienteEspecifico));
         doNothing().when(clienteValidation).validarBuscaPorCliente(idClienteEspecifico);
         doNothing().when(pagamentoValidation).validarExistenciaReserva(idClienteEspecifico, idReservaEspecifica);
         doNothing().when(pagamentoValidation).validarReservaAtivaOuInativa(idClienteEspecifico, idReservaEspecifica);
@@ -295,6 +344,7 @@ class PagamentoServiceTest {
     @DisplayName("Não deve enviar mensagem para RabbitMQ se validação falhar")
     void naoDeveEnviarMensagemSeValidacaoFalhar() {
         // Arrange
+        when(clienteService.buscarClientePorId(idCliente)).thenReturn(Optional.of(cliente));
         doThrow(new ClienteInexistenteException("Cliente não encontrado"))
                 .when(clienteValidation).validarBuscaPorCliente(idCliente);
 

@@ -1,5 +1,6 @@
 package com.romanowski.pedro.service;
 
+import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.entity.Pagamento;
 import com.romanowski.pedro.repository.ClienteRepository;
 import com.romanowski.pedro.service.validation.ClienteValidation;
@@ -19,16 +20,19 @@ public class PagamentoService {
     private final ClienteValidation clienteValidation;
     private final PagamentoValidation pagamentoValidation;
     private final RabbitTemplate rabbitTemplate;
+    private final ClienteService clienteService;
 
-    public PagamentoService(ClienteValidation clienteValidation, PagamentoValidation pagamentoValidation, RabbitTemplate rabbitTemplate) {
+    public PagamentoService(ClienteValidation clienteValidation, PagamentoValidation pagamentoValidation, RabbitTemplate rabbitTemplate, ClienteService clienteService) {
         this.clienteValidation = clienteValidation;
         this.pagamentoValidation = pagamentoValidation;
         this.rabbitTemplate = rabbitTemplate;
+        this.clienteService = clienteService;
     }
 
     public void realizarPagamento(UUID idCliente, Long idReserva, Double valor){
         logger.info("Iniciando pagamento para o cliente com id: {} e reserva com id: {}", idCliente, idReserva);
-        clienteValidation.validarBuscaPorCliente(idCliente);
+        Cliente cliente = clienteService.buscarClientePorId(idCliente).get();
+        clienteValidation.validarBuscaPorCliente(cliente.getId());
         pagamentoValidation.validarExistenciaReserva(idCliente, idReserva);
         pagamentoValidation.validarReservaAtivaOuInativa(idCliente, idReserva);
         pagamentoValidation.validarSaldoCliente(idCliente, valor);
@@ -38,5 +42,6 @@ public class PagamentoService {
                 valor(valor).
                 build();
         rabbitTemplate.convertAndSend("pagamentos.ex", "", pagamento);
+        cliente.setSaldo(cliente.getSaldo() - valor);
     }
 }
