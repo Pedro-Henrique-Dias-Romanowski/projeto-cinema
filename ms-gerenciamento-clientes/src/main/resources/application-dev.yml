@@ -77,6 +77,20 @@ spring:
   security:
     jwt:
       secret: ${JWT_SECRET:fT8X27NnYKddsmTlJMIbwf2XvXPvBHdEP4C1iI4qZSU=}
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: BASIC
+      cliente-service:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: FULL
+
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -106,7 +120,7 @@ resilience4j:
           - java.io.IOException
           - feign.FeignException
     instances:
-      reservaService:
+      pagamentoService:
         baseConfig: default
         waitDurationInOpenState: 15s
         slidingWindowSize: 20
@@ -123,11 +137,13 @@ resilience4j:
           - org.springframework.web.client.HttpServerErrorException
           - java.util.concurrent.TimeoutException
           - java.io.IOException
-          - feign.FeignException
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.InternalServerError
+          - feign.RetryableException
         ignoreExceptions:
           - com.romanowski.pedro.exceptions.BusinessException
     instances:
-      reservaService:
+      pagamentoService:
         baseConfig: default
         maxAttempts: 3
         waitDuration: 500ms
@@ -146,16 +162,6 @@ resilience4j:
       clienteService:
         baseConfig: default
         limitForPeriod: 30
-
-  bulkhead:
-    configs:
-      default:
-        maxConcurrentCalls: 10
-        maxWaitDuration: 1s
-    instances:
-      reservaService:
-        baseConfig: default
-        maxConcurrentCalls: 5
 
   timelimiter:
     configs:

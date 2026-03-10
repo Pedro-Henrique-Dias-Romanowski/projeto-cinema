@@ -114,7 +114,9 @@ resilience4j:
           - org.springframework.web.client.HttpServerErrorException
           - java.util.concurrent.TimeoutException
           - java.io.IOException
-          - feign.FeignException
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.InternalServerError
+          - feign.RetryableException
         ignoreExceptions:
           - com.romanowski.pedro.exceptions.BusinessException
     instances:
@@ -137,16 +139,6 @@ resilience4j:
       clienteService:
         baseConfig: default
         limitForPeriod: 30
-
-  bulkhead:
-    configs:
-      default:
-        maxConcurrentCalls: 10
-        maxWaitDuration: 1s
-    instances:
-      reservaService:
-        baseConfig: default
-        maxConcurrentCalls: 5
 
   timelimiter:
     configs:

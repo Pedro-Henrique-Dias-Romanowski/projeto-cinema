@@ -4,6 +4,7 @@ import com.romanowski.pedro.entity.Cliente;
 import com.romanowski.pedro.repository.ClienteRepository;
 import com.romanowski.pedro.service.email.EmailService;
 import com.romanowski.pedro.service.validation.ClienteValidation;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,12 +68,14 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
+    @RateLimiter(name = "clienteService")
     public Optional<Cliente> buscarClientePorId(UUID id){
         logger.info("Iniciando busca do cliente com id: {}", id);
         return clienteRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
+    @RateLimiter(name = "clienteService")
     public List<Cliente> listarClientes(){
         logger.info("Iniciando listagem de clientes");
         clienteValidation.validarListagemClientes();
