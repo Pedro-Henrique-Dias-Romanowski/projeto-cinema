@@ -2,6 +2,7 @@ package com.romanowski.pedro.controller.handler;
 
 import com.romanowski.pedro.exceptions.SecurityException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.ServiceUnavailableException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -57,5 +58,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 request.getDescription(false));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ExceptionResponse> handleServiceUnavailableException(ServiceUnavailableException ex, HttpServletRequest request){
+        ExceptionResponse response = new ExceptionResponse(
+                new Date(),
+                ex.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 }

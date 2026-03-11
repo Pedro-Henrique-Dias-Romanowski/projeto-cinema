@@ -6,6 +6,7 @@ import com.romanowski.pedro.dto.response.LoginResponseDTO;
 import com.romanowski.pedro.entity.AdministradorEntity;
 import com.romanowski.pedro.entity.ClienteEntity;
 import com.romanowski.pedro.service.LoginService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +30,7 @@ public class LoginController implements LoginControllerSwagger {
     }
 
     @Override
+    @RateLimiter(name = "loginService")
     public ResponseEntity<LoginResponseDTO> efetuarLoginCliente(LoginRequestDTO loginRequestDTO) {
         var authenticationToken = new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.senha());
         var authentication = authenticationManager.authenticate(authenticationToken);
@@ -39,6 +41,7 @@ public class LoginController implements LoginControllerSwagger {
 
 
     @Override
+    @RateLimiter(name = "loginService")
     public ResponseEntity<LoginResponseDTO> efetuarLoginAdministradores(LoginRequestDTO loginRequestDTO) throws Exception {
         var authenticationToken = new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.senha());
         var authentication = authenticationManager.authenticate(authenticationToken);

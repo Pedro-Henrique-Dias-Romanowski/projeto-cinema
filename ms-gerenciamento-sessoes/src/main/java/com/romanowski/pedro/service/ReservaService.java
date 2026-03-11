@@ -11,12 +11,16 @@ import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.email.EmailService;
 import com.romanowski.pedro.service.validation.ReservaValidation;
 import com.romanowski.pedro.service.validation.SessaoValidation;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.ServiceUnavailableException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +61,9 @@ public class ReservaService {
     @Value("${mensagem.email.pagamento.reserva.concluido:}")
     private String mensagemPagamentoReservaConfirmadoEmail;
 
+    @Value("${ms.clientes.indisponivel}")
+    private String mensagemErroClientesFeing;
+
     public ReservaService(ReservaRepository reservaRepository, SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, ClienteFeignClient clienteFeignClient, SessaoService sessaoService, ReservaValidation reservaValidation, EmailService emailService) {
         this.reservaRepository = reservaRepository;
         this.sessaoRepository = sessaoRepository;
@@ -73,6 +80,9 @@ public class ReservaService {
 
 
     @Transactional
+    @CircuitBreaker(name = "reservaService", fallbackMethod = "adicionarReservaFallback")
+    @Retry(name = "reservaService", fallbackMethod = "adicionarReservaFallback")
+    @RateLimiter(name = "reservaService")
     public Reserva adicionarReserva(UUID idCliente, Long idSessao){
         logger.info("Adicionando reserva para o cliente de ID: {} na sessão de ID: {}", idCliente, idSessao);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
@@ -94,6 +104,9 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
+    @CircuitBreaker(name = "reservaService", fallbackMethod = "listagemReservasFallback")
+    @Retry(name = "reservaService", fallbackMethod = "listagemReservasFallback")
+    @RateLimiter(name = "reservaService")
     public List<Reserva> listarReservas(UUID idCliente){
         logger.info("Listando reservas para o cliente de ID: {}", idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
@@ -104,6 +117,9 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
+    @CircuitBreaker(name = "reservaService", fallbackMethod = "buscarReservaFallback")
+    @Retry(name = "reservaService", fallbackMethod = "buscarReservaFallback")
+    @RateLimiter(name = "reservaService")
     public Optional<Reserva> buscarReservaPorId(UUID idCliente, Long idReserva){
         logger.info("Buscando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
@@ -115,6 +131,9 @@ public class ReservaService {
     }
 
     @Transactional
+    @CircuitBreaker(name = "reservaService", fallbackMethod = "cancelamentoReservaFallback")
+    @Retry(name = "reservaService", fallbackMethod = "cancelamentoReservaFallback")
+    @RateLimiter(name = "reservaService")
     public void cancelarReserva(UUID idCliente, Long idReserva){
         logger.info("Cancelando reserva de ID: {} para o cliente de ID: {}", idReserva, idCliente);
         Optional<ClienteResponseDTO> cliente = clienteFeignClient.obterClientePorId(idCliente);
@@ -141,5 +160,25 @@ public class ReservaService {
         reservaRepository.save(reserva);
         var mensagem = formatarMensagem(mensagemPagamentoReservaConfirmadoEmail, reserva.getId(), reserva.getSessao().getTituloFilme(), reserva.getSessao().getDataHoraSessao().toString(), reserva.getSessao().getSala(), reserva.getSessao().getPreco().toString());
         emailService.enviarEmail(cliente.get().emailCliente(), "Pagamento da reserva confirmado", mensagem);
+    }
+
+    public Reserva adicionarReservaFallback(UUID idCliente,UUID idSessao, Throwable throwable) throws Exception{
+        logger.error("Erro ao cadastrar reserva na sessao de ID: {} para o cliente com ID: {}. Erro: {}", idSessao, idCliente, throwable.getMessage());
+        throw  new ServiceUnavailableException(mensagemErroClientesFeing);
+    }
+
+    public List<Reserva> listagemReservasFallback(UUID idCliente, Throwable throwable) throws Exception{
+        logger.error("Erro ao realizar listagem de reservas para o cliente de ID: {}. Erro: {}", idCliente, throwable.getMessage());
+        throw  new ServiceUnavailableException(mensagemErroClientesFeing);
+    }
+
+    public Optional<Reserva> buscarReservaFallback(UUID idCliente,UUID idReserva, Throwable throwable) throws Exception{
+        logger.error("Erro ao realizar busca da reserva com o ID: {} para o cliente de ID: {}. Erro: {}", idCliente, idReserva, throwable.getMessage());
+        throw  new ServiceUnavailableException(mensagemErroClientesFeing);
+    }
+
+    public void cancelamentoReservaFallback(UUID idCliente, UUID idReserva, Throwable throwable) throws Exception{
+        logger.error("Erro ao cancelar reserva de ID: {} para o cliente de ID: {}. Erro: {}",idReserva, idCliente, throwable.getMessage());
+        throw  new ServiceUnavailableException(mensagemErroClientesFeing);
     }
 }
