@@ -74,13 +74,13 @@ Sistema que simula as operações de um cinema moderno, incluindo:
             │  - Email       │          └─────────────────┘
             └────────────────┘
                     │
-        ┌───────────┴
-        │                       
-┌───────▼────────┐    
-│  MySQL (x4)    │    
-│  - Autenticacao│    
-│  - Catalogo    │    
-│  - Clientes    │    
+        ┌───────────┴───────────┐
+        │                       │
+┌───────▼────────┐    ┌────────▼────────┐
+│  MySQL (x4)    │    │     Zipkin      │
+│  - Autenticacao│    │   Tracing       │
+│  - Catalogo    │    │    :9411        │
+│  - Clientes    │    └─────────────────┘
 │  - Sessoes     │
 └────────────────┘
 ```
@@ -164,24 +164,35 @@ Microserviço de sessões de cinema e reservas.
 
 ---
 
-
-#### 5️⃣ **ms-api-gateway**
+### 5️⃣ **ms-api-gateway** `:8085`
 Gateway centralizado para roteamento e gerenciamento de requisições.
 
-**Planejado:**
-- Spring Cloud Gateway
-- Roteamento centralizado
-- CORS global
-- Rate limiting
+**Responsabilidades:**
+- Roteamento centralizado para todos os microserviços
+- Configuração de CORS
+- Agregação de documentação Swagger
 - Logging de requisições
+- Integração com Service Discovery
 
-#### 6️⃣ **service-discovery-cinema**
+**Tecnologias:**
+- Spring Cloud Gateway (WebFlux)
+- Eureka Client
+- SpringDoc OpenAPI
+
+---
+
+### 6️⃣ **service-discovery-cinema** `:8761`
 Service Discovery para registro automático de serviços.
 
-**Planejado:**
-- Netflix Eureka Server
+**Responsabilidades:**
 - Registro dinâmico de microserviços
-- Load balancing
+- Health checking
+- Load balancing client-side
+- Descoberta de serviços
+
+**Tecnologias:**
+- Netflix Eureka Server
+- Spring Cloud Netflix
 
 ---
 
@@ -301,38 +312,54 @@ Pipeline automatizado com **GitHub Actions** que executa a cada push/PR:
 
 ## 📡 Documentação da API
 
+### Documentação Centralizada (Recomendado)
+**Swagger UI Gateway:** http://localhost:8085/swagger-ui.html
 
-## Documentação centralizada através do Gateway (8085)
+Acesse toda a documentação de forma unificada através do API Gateway.
 
-**Swagger UI:** http://localhost:8085/swagger-ui.html
+---
 
+### Documentação Individual por Microserviço
 
-### 🔐 Autenticação (`:8084`)
-```
+#### 🔐 Autenticação (`:8084`)
 **Swagger UI:** http://localhost:8084/swagger-ui.html
 
----
+**Principais Endpoints:**
+- `POST /v1/auth/clientes/login` - Login de cliente
+- `POST /v1/auth/administradores/login` - Login de administrador
+- `POST /v1/auth/clientes` - Cadastro de cliente
+- `GET /v1/auth/clientes/{id}` - Buscar cliente por ID
 
-### 🎬 Catálogo (`:8082`)
-```
-
+#### 🎬 Catálogo (`:8082`)
 **Swagger UI:** http://localhost:8082/swagger-ui.html
 
----
+**Principais Endpoints:**
+- `GET /v1/filmes` - Listar todos os filmes
+- `GET /v1/filmes/{id}` - Buscar filme por ID
+- `POST /v1/filmes` - Cadastrar novo filme (ADMIN)
+- `PUT /v1/filmes/{id}` - Atualizar filme (ADMIN)
+- `DELETE /v1/filmes/{id}` - Remover filme (ADMIN)
 
-### 👥 Clientes (`:8080`)
-```
-```
-
+#### 👥 Clientes (`:8080`)
 **Swagger UI:** http://localhost:8080/swagger-ui.html
 
----
+**Principais Endpoints:**
+- `GET /v1/clientes` - Listar todos os clientes
+- `GET /v1/clientes/{id}` - Buscar cliente por ID
+- `PUT /v1/clientes/{id}` - Atualizar cliente
+- `DELETE /v1/clientes/{id}` - Remover cliente
+- `POST /v1/pagamentos` - Realizar pagamento
 
-### 🎟️ Sessões (`:8081`)
-```
-```
-
+#### 🎟️ Sessões (`:8081`)
 **Swagger UI:** http://localhost:8081/swagger-ui.html
+
+**Principais Endpoints:**
+- `GET /v1/sessoes` - Listar todas as sessões
+- `GET /v1/sessoes/{id}` - Buscar sessão por ID
+- `POST /v1/sessoes` - Criar nova sessão (ADMIN)
+- `POST /v1/reservas` - Criar reserva
+- `GET /v1/reservas/cliente/{idCliente}` - Listar reservas do cliente
+- `DELETE /v1/reservas/{id}` - Cancelar reserva
 
 ---
 
@@ -341,6 +368,17 @@ Pipeline automatizado com **GitHub Actions** que executa a cada push/PR:
 **Credenciais:**
 - Usuário: `cinema_rabbitmq` (configurável no .env)
 - Senha: `rabbitmq_password` (configurável no .env)
+
+**Queues configuradas:**
+- `pagamentos.detalhes` - Fila de processamento de pagamentos
+- `pagamentos.detalhes.dlq` - Dead Letter Queue para falhas
+
+---
+
+### 🔍 Zipkin (Distributed Tracing)
+**URL:** http://localhost:9411  
+
+Visualize traces distribuídos entre os microserviços para debug e análise de performance.
 
 ---
 
