@@ -7,11 +7,16 @@ import com.romanowski.pedro.entity.Sessao;
 import com.romanowski.pedro.feign.CatalogoFeignClient;
 import com.romanowski.pedro.repository.SessaoRepository;
 import com.romanowski.pedro.service.validation.SessaoValidation;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.ServiceUnavailableException;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +29,9 @@ public class SessaoService {
     private final SessaoValidation sessaoValidation;
     private final CatalogoFeignClient catalogoFeignClient;
 
+    @Value("${ms.catalogo.indisponivel}")
+    private String mensagemErroCatalogoFeign;
+
     public SessaoService(SessaoRepository sessaoRepository, SessaoValidation sessaoValidation, CatalogoFeignClient catalogoFeignClient) {
         this.sessaoRepository = sessaoRepository;
         this.sessaoValidation = sessaoValidation;
@@ -32,6 +40,9 @@ public class SessaoService {
 
 
     @Transactional
+    @CircuitBreaker(name = "sessaoService", fallbackMethod = "cadastrarSessaoFalback")
+    @Retry(name = "sessaoService", fallbackMethod = "cadastrarSessaoFallback")
+    @RateLimiter(name = "sessaoService")
     public Sessao cadastrarSessao(Sessao sessao){
         try {
             logger.info("Iniciando cadastro de sessão para o filme: {}", sessao.getTituloFilme());
@@ -52,6 +63,7 @@ public class SessaoService {
 
 
     @Transactional(readOnly = true)
+    @RateLimiter(name = "sessaoService")
     public List<Sessao> listarSessoes(){
         logger.info("Iniciando listagem de sessões");
         sessaoValidation.validarBuscaSessoes();
@@ -59,6 +71,7 @@ public class SessaoService {
     }
 
     @Transactional(readOnly = true)
+    @RateLimiter(name = "sessaoService")
     public Optional<Sessao> procurarSessaoPorId(Long id){
         logger.info("Iniciando busca de sessão por ID: {}", id);
         sessaoValidation.validarSessao(id);
@@ -66,6 +79,7 @@ public class SessaoService {
     }
 
     @Transactional
+    @RateLimiter(name = "sessaoService")
     public void cancelarSessao(Long idSessao){
         logger.info("Canelando sessão de ID: {}", idSessao);
         sessaoValidation.validarSessao(idSessao);
@@ -88,5 +102,12 @@ public class SessaoService {
         Sessao sessao = sessaoRepository.findById(reserva.getSessao().getId()).get();
         sessao.getReservas().remove(reserva);
         sessaoRepository.save(sessao);
+    }
+
+
+    public Sessao cadastrarSessaoFalback(Sessao sessao, Throwable throwable) throws Exception{
+        logger.error("Ocorreu um erro inesperado no serviço de catálogo ao cadastrar uma sessão com o de id: {}, e na data: {}. Erro: {}", sessao.getId(), sessao.getDataHoraSessao(), throwable.getMessage());
+        throw new ServiceUnavailableException(mensagemErroCatalogoFeign);
+
     }
 }

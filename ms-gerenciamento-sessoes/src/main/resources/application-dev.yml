@@ -127,7 +127,7 @@ resilience4j:
         waitDurationInOpenState: 15s
         slidingWindowSize: 20
         minimumNumberOfCalls: 10
-      catalogoService:
+      sessaoService:
         baseConfig: default
         waitDurationInOpenState: 15s
         slidingWindowSize: 20
@@ -154,7 +154,7 @@ resilience4j:
         baseConfig: default
         maxAttempts: 3
         waitDuration: 500ms
-      catalogoService:
+      sessaoService:
         baseConfig: default
         maxAttempts: 3
         waitDuration: 500ms
@@ -167,7 +167,7 @@ resilience4j:
         limitRefreshPeriod: 1s
         timeoutDuration: 500ms
     instances:
-      reservaService:
+      clienteService:
         baseConfig: default
         limitForPeriod: 10
       sessaoService:
@@ -180,9 +180,9 @@ resilience4j:
         timeoutDuration: 3s
         cancelRunningFuture: true
     instances:
-      catalogoService:
+      clienteService:
         baseConfig: default
         timeoutDuration: 5s
-      clienteService:
+      sessaoService:
         baseConfig: default
         timeoutDuration: 5s
