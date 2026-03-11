@@ -45,11 +45,16 @@ Sistema que simula as operações de um cinema moderno, incluindo:
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
-│                    API Gateway (Em Dev)                      │
+│                    API Gateway                               │
 │                    - Roteamento centralizado                 │
 │                    - CORS                                    │
 │                    - Rate Limiting                           │
 └───────────────────────────┬─────────────────────────────────┘
+                            |
+        __________________________________________
+       |            Service Disovery              |
+       |                                          |
+       |__________________________________________| 
                             │
         ┌───────────────────┼───────────────────┐
         │                   │                   │
@@ -69,13 +74,13 @@ Sistema que simula as operações de um cinema moderno, incluindo:
             │  - Email       │          └─────────────────┘
             └────────────────┘
                     │
-        ┌───────────┴───────────┐
-        │                       │
-┌───────▼────────┐    ┌────────▼────────┐
-│  MySQL (x4)    │    │  Service        │
-│  - Autenticacao│    │  Discovery      │
-│  - Catalogo    │    │  (Em Dev)       │
-│  - Clientes    │    └─────────────────┘
+        ┌───────────┴
+        │                       
+┌───────▼────────┐    
+│  MySQL (x4)    │    
+│  - Autenticacao│    
+│  - Catalogo    │    
+│  - Clientes    │    
 │  - Sessoes     │
 └────────────────┘
 ```
@@ -159,7 +164,6 @@ Microserviço de sessões de cinema e reservas.
 
 ---
 
-### 🚧 **Em Desenvolvimento**
 
 #### 5️⃣ **ms-api-gateway**
 Gateway centralizado para roteamento e gerenciamento de requisições.
@@ -191,6 +195,8 @@ Service Discovery para registro automático de serviços.
   - OpenFeign
 - **Spring Security + JWT**
 - **Spring Data JPA**
+- **Resilience4j**
+- **Zipkin**
 - **Bean Validation**
 
 ### Banco de Dados
@@ -293,27 +299,21 @@ Pipeline automatizado com **GitHub Actions** que executa a cada push/PR:
 
 ---
 
-## 📡 Endpoints da API
+## 📡 Documentação da API
+
+
+## Documentação centralizada através do Gateway (8085)
+
+**Swagger UI:** http://localhost:8085/swagger-ui.html
+
 
 ### 🔐 Autenticação (`:8084`)
 ```
-POST   /v1/auth/clientes/login          # Login de cliente
-POST   /v1/auth/administradores/login   # Login de admin
-POST   /v1/auth/clientes                # Cadastro de cliente
-```
-
 **Swagger UI:** http://localhost:8084/swagger-ui.html
 
 ---
 
 ### 🎬 Catálogo (`:8082`)
-```
-GET    /v1/filmes                 # Listar filmes
-GET    /v1/filmes/{id}            # Buscar por ID
-GET    /v1/filmes/titulo/{titulo} # Buscar por título
-POST   /v1/filmes                 # Cadastrar filme (ADMIN)
-PUT    /v1/filmes/{id}            # Atualizar filme (ADMIN)
-DELETE /v1/filmes/{id}            # Deletar filme (ADMIN)
 ```
 
 **Swagger UI:** http://localhost:8082/swagger-ui.html
@@ -322,11 +322,6 @@ DELETE /v1/filmes/{id}            # Deletar filme (ADMIN)
 
 ### 👥 Clientes (`:8080`)
 ```
-GET    /v1/clientes           # Listar clientes
-GET    /v1/clientes/{id}      # Buscar por ID
-POST   /v1/clientes           # Cadastrar cliente
-PUT    /v1/clientes/{id}      # Atualizar cliente
-POST   /v1/pagamentos         # Processar pagamento
 ```
 
 **Swagger UI:** http://localhost:8080/swagger-ui.html
@@ -335,15 +330,6 @@ POST   /v1/pagamentos         # Processar pagamento
 
 ### 🎟️ Sessões (`:8081`)
 ```
-GET    /v1/sessoes            # Listar sessões
-GET    /v1/sessoes/{id}       # Buscar por ID
-POST   /v1/sessoes            # Cadastrar sessão (ADMIN)
-PUT    /v1/sessoes/{id}       # Atualizar sessão (ADMIN)
-DELETE /v1/sessoes/{id}       # Deletar sessão (ADMIN)
-
-POST   /v1/reservas           # Criar reserva
-GET    /v1/reservas/{id}      # Buscar reserva
-DELETE /v1/reservas/{id}      # Cancelar reserva
 ```
 
 **Swagger UI:** http://localhost:8081/swagger-ui.html
@@ -396,4 +382,4 @@ mysql -h localhost -P 3310 -u cinema_user -p
 
 ## 🙏 Agradecimentos
 
-Projeto desenvolvido para fins de aprendizado e demonstração de conceitos de arquitetura de microserviços, containerização e DevOps.
+Projeto desenvolvido para fins de aprendizado e demonstração de conceitos de arquitetura de microserviços, containerização e DevOps
