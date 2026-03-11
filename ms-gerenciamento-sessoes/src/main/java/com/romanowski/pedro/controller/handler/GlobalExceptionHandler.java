@@ -51,7 +51,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
-    public ResponseEntity<ExceptionResponse> handleServiceUnavailableException(Exception ex, HttpServletRequest request){
+    public ResponseEntity<ExceptionResponse> handleServiceUnavailableException(ServiceUnavailableException ex, HttpServletRequest request){
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
                 ex.getMessage(),
