@@ -52,7 +52,7 @@ Sistema que simula as operações de um cinema moderno, incluindo:
 └───────────────────────────┬─────────────────────────────────┘
                             |
         __________________________________________
-       |            Service Disovery              |
+       |            Service Discovery              |
        |                                          |
        |__________________________________________| 
                             │
