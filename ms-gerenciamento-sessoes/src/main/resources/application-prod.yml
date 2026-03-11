@@ -69,6 +69,26 @@ spring:
   security:
     jwt:
       secret: ${JWT_SECRET}
+
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: BASIC
+      cliente-service:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: FULL
+      catalogo-service:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: FULL
+
+
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -120,7 +140,9 @@ resilience4j:
           - org.springframework.web.client.HttpServerErrorException
           - java.util.concurrent.TimeoutException
           - java.io.IOException
-          - feign.FeignException
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.InternalServerError
+          - feign.RetryableException
         ignoreExceptions:
           - com.romanowski.pedro.exceptions.BusinessException
     instances:
