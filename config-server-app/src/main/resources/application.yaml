@@ -1,0 +1,16 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: config-server-app
+  profiles:
+    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/pxdrophd/config-server-cinema.git
+          default-label: main
+          search-paths:
+            - "{application}"
+          clone-on-start: true
