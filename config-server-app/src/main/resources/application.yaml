@@ -9,7 +9,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/pxdrophd/config-server-cinema.git
+          uri: https://github.com/Pedro-Henrique-Dias-Romanowski/config-server-cinema
           default-label: main
           search-paths:
             - "{application}"
