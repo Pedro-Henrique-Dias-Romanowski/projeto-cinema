@@ -1,4 +1,18 @@
 spring:
+  application:
+    name: ms-gerenciamento-catalogo
+
   config:
-    activate:
-      on-profile: dev
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
