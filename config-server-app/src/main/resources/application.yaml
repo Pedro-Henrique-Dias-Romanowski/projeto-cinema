@@ -9,7 +9,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/Pedro-Henrique-Dias-Romanowski/config-server-cinema
+          uri: https://github.com/Pedro-Henrique-Dias-Romanowski/config-server-cinema.git
           default-label: main
           search-paths:
             - "{application}"
