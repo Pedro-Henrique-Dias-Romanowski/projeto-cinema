@@ -1,3 +1,5 @@
 spring:
-  profiles:
-    active: dev
+  application:
+    name: ms-gerenciamento-catalogo
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}

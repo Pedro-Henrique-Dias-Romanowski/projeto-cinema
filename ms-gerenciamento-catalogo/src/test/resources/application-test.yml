@@ -1,9 +1,14 @@
 spring:
+  config:
+    import: ""
   autoconfigure:
     exclude:
       - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
   flyway:
     enabled: false
+  cloud:
+    config:
+      enabled: false
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
