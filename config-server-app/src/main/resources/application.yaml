@@ -4,7 +4,8 @@ spring:
   application:
     name: config-server-app
   profiles:
-    active: git
+    active:
+      - git
   cloud:
     config:
       server:
