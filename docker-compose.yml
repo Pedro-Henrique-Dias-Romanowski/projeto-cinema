@@ -32,7 +32,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8888"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/config-server/8888"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,7 +46,7 @@ services:
     container_name: ms-api-gateway
     environment:
       CONFIG_SERVER_URL: http://config-server:8888
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8085:8085"
@@ -196,7 +196,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8084:8084"
@@ -230,7 +230,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8082:8082"
@@ -269,7 +269,7 @@ services:
       MAIL_USER: ${MAIL_USER}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_RESERVA_SERVICE: http://ms-sessoes:8081
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8080:8080"
@@ -311,7 +311,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_CATALOGO_SERVICE: http://ms-catalogo:8082
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8081:8081"
