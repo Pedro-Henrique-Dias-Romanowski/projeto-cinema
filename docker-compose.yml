@@ -10,7 +10,29 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8761"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/service-discovery/8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  # Config Server
+  config-server:
+    build:
+      context: ./config-server-app
+      dockerfile: Dockerfile
+    container_name: config-server-cinema
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: ${CONFIG_SERVER_GIT_URI}
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/config-server/8888"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,12 +45,15 @@ services:
       dockerfile: Dockerfile
     container_name: ms-api-gateway
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8085:8085"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       zipkin:
         condition: service_healthy
@@ -149,7 +174,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:9411/health"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://zipkin:9411/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -162,6 +187,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-autenticacao-cinema
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_AUTENTICACAO: mysql-autenticacao
       DB_PORT: 3306
@@ -170,12 +196,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8084:8084"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       mysql-autenticacao:
         condition: service_healthy
@@ -194,6 +222,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-catalogo
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_CATALOGO: mysql-catalogo
       DB_PORT: 3306
@@ -201,12 +230,14 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8082:8082"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       mysql-catalogo:
         condition: service_healthy
@@ -223,6 +254,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-clientes
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_CLIENTES: mysql-clientes
       DB_PORT: 3306
@@ -237,11 +269,13 @@ services:
       MAIL_USER: ${MAIL_USER}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_RESERVA_SERVICE: http://ms-sessoes:8081
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8080:8080"
     depends_on:
+      config-server:
+        condition: service_healthy
       service-discovery:
         condition: service_healthy
       mysql-clientes:
@@ -261,6 +295,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-sessoes
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_SESSOES: mysql-sessoes
       DB_PORT: 3306
@@ -276,11 +311,13 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       URL_CATALOGO_SERVICE: http://ms-catalogo:8082
       URL_CLIENTE_SERVICE: http://ms-clientes:8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
       - "8081:8081"
     depends_on:
+      config-server:
+        condition: service_healthy
       service-discovery:
         condition: service_healthy
       mysql-sessoes:

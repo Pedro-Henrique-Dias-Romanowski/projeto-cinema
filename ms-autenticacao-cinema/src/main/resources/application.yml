@@ -5,3 +5,9 @@ spring:
     name: ms-autenticacao-cinema
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://service-discovery:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true     
