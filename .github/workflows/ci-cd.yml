@@ -41,7 +41,11 @@ jobs:
 
     - name: Build and Test service-discovery with Maven
       working-directory: ./service-discovery-cinema
-      run: mvn clean package    
+      run: mvn clean package
+
+    - name: Build and Test config-server-app with Maven
+      working-directory: ./config-server-app
+      run: mvn clean package       
 
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -57,7 +61,8 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:latest ./ms-gerenciamento-sessoes
         docker build -t ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest ./service-discovery-cinema
         docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest ./ms-api-gateway
-
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest ./config-server-app
+        
     - name: Tag Docker Images with Run ID
       run: |
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-autenticacao-cinema:latest ${{ secrets.DOCKER_USERNAME }}/ms-autenticacao-cinema:${{ github.run_id }}
@@ -66,6 +71,7 @@ jobs:
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:latest ${{ secrets.DOCKER_USERNAME }}/ms-gerenciamento-sessoes:${{ github.run_id }}
         docker tag ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest ${{ secrets.DOCKER_USERNAME }}/service-discovery:${{ github.run_id }}
         docker tag ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
+        docker tag ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest ${{ secrets.DOCKER_USERNAME }}/config-server-app:${{ github.run_id }}
 
     - name: Push Docker Images to Docker Hub
       run: |
@@ -81,5 +87,7 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/service-discovery:${{ github.run_id }}
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:${{ github.run_id }}
 
       
