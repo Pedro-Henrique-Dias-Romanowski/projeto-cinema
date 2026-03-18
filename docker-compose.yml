@@ -10,7 +10,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/8761"]
+      test: ["CMD", "bash", "-c", "</dev/tcp/service-discovery/8761"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,7 +32,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://config-server:8888/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,6 +45,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-api-gateway
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka
       SPRING_ZIPKIN_BASE_URL: ${SPRING_ZIPKIN_BASE_URL}
     ports:
@@ -173,7 +174,7 @@ services:
     networks:
       - cinema-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:9411/health"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://zipkin:9411/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -186,6 +187,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-autenticacao-cinema
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_AUTENTICACAO: mysql-autenticacao
       DB_PORT: 3306
@@ -220,6 +222,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-catalogo
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_CATALOGO: mysql-catalogo
       DB_PORT: 3306
@@ -251,6 +254,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-clientes
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_CLIENTES: mysql-clientes
       DB_PORT: 3306
@@ -291,6 +295,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms-gerenciamento-sessoes
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST_SESSOES: mysql-sessoes
       DB_PORT: 3306
