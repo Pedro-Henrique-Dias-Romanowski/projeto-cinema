@@ -16,6 +16,28 @@ services:
       retries: 5
     restart: on-failure
 
+  # Config Server
+  config-server:
+    build:
+      context: ./config-server-app
+      dockerfile: Dockerfile
+    container_name: config-server-cinema
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: ${CONFIG_SERVER_GIT_URI}
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - cinema-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
   # API Gateway
   api-gateway:
     build:
@@ -29,6 +51,8 @@ services:
       - "8085:8085"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       zipkin:
         condition: service_healthy
@@ -177,6 +201,8 @@ services:
     depends_on:
       service-discovery:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
       mysql-autenticacao:
         condition: service_healthy
       zipkin:
@@ -207,6 +233,8 @@ services:
       - "8082:8082"
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       mysql-catalogo:
         condition: service_healthy
@@ -242,6 +270,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      config-server:
+        condition: service_healthy
       service-discovery:
         condition: service_healthy
       mysql-clientes:
@@ -281,6 +311,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
+      config-server:
+        condition: service_healthy
       service-discovery:
         condition: service_healthy
       mysql-sessoes:
