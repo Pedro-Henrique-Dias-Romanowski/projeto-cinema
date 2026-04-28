@@ -90,9 +90,11 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:${{ github.run_id }}
 
-    - name: Run Discord Webhook
-      uses: johnnyhuy/actions-discord-git-webhook@v1.0.4
+    - name: Discord Commits
+      uses: Sniddl/discord-commits@v1.8
       with:
-        webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        template: "avatar-with-link"
+        include-extras: true
 
 
