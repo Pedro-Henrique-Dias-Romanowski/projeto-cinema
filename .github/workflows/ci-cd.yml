@@ -89,5 +89,3 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:${{ github.run_id }}
-
-      
