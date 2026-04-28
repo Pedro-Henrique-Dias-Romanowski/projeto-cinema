@@ -89,12 +89,3 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/ms-api-gateway:${{ github.run_id }}
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/config-server-app:${{ github.run_id }}
-
-    - name: Discord Commits
-      uses: Sniddl/discord-commits@v1.8
-      with:
-        webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        template: "avatar-with-link"
-        include-extras: true
-
-
