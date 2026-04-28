@@ -7,9 +7,7 @@ jobs:
     notify:
         runs-on: ubuntu-latest
         steps:
-          - name: Discord Commits
-            uses: Sniddl/discord-commits@v1.8
+          - name: Run Discord Webhook
+            uses: johnnyhuy/actions-discord-git-webhook@main
             with:
-              webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-              template: "avatar-with-link"
-              include-extras: true
+              webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
